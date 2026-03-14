@@ -1,0 +1,156 @@
+{
+    "Tool": "CSR Generation",
+    "Table - Configuration": [
+    {
+        "Module Name": "m_vlsi_csr",
+        "Address Width": "16",
+        "Data Width": "32",
+        "Protocol": "APB",
+        "Asynchornous": "0"
+    }
+    ],
+    "Table - Register Definition": [
+        {
+        "Register Name": "abc",
+        "Offset": "0x0",
+        "Reset Value": "0x0",
+        "Descriprtion": "None",
+        "Bits": [
+            {
+                "Bit Name": "start0",
+                "Bit Type": "ro",
+                "Bit Field": "[31]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start1",
+                "Bit Type": "rw",
+                "Bit Field": "[30]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start2",
+                "Bit Type": "rwi",
+                "Bit Field": "[29]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start3",
+                "Bit Type": "rw",
+                "Bit Field": "[28:27]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start4",
+                "Bit Type": "rwi",
+                "Bit Field": "[26:25]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "reserved",
+                "Bit Type": "ro",
+                "Bit Field": "[24:0]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            }
+          ]
+        },
+        {
+        "Register Name": "def",
+        "Offset": "0x4",
+        "Reset Value": "0x0",
+        "Descriprtion": "None",
+        "Bits": [
+            {
+                "Bit Name": "start0",
+                "Bit Type": "ro",
+                "Bit Field": "[31]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start1",
+                "Bit Type": "rw",
+                "Bit Field": "[30]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start2",
+                "Bit Type": "rwi",
+                "Bit Field": "[29]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start3",
+                "Bit Type": "rw",
+                "Bit Field": "[28:27]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start4",
+                "Bit Type": "rwi",
+                "Bit Field": "[26:25]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "reserved",
+                "Bit Type": "ro",
+                "Bit Field": "[24:0]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start0",
+                "Bit Type": "rw",
+                "Bit Field": "[31]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start1",
+                "Bit Type": "rwi",
+                "Bit Field": "[30]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start2",
+                "Bit Type": "w1c",
+                "Bit Field": "[29]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start3",
+                "Bit Type": "w1c",
+                "Bit Field": "[28:27]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "start4",
+                "Bit Type": "rwi",
+                "Bit Field": "[26:25]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            },
+            {
+                "Bit Name": "reserved",
+                "Bit Type": "ro",
+                "Bit Field": "[24:0]",
+                "Reset Value": "0x0",
+                "Description": "None"
+            }
+          ]
+        }
+    ]
+}
