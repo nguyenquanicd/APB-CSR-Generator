@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 
 # Project inputs
-set FILELIST   ${CSR_GEN_HOME}/RTL/filelist.f
+set FILELIST   $::env(CSR_GEN_HOME)/RTL/filelist.f
 set DEFINES    ""
 set TOP_DESIGN m_vlsi_csr
 

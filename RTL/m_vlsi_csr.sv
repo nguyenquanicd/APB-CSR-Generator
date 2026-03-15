@@ -1,13 +1,12 @@
 `timescale 1ns/1ps
 //--------------------------------------------------------------------
-//Product of: VLSI Technology
-//Project: The UVM environemnt for UART (Universal Asynchronous Receiver Transmitter)
-//Generator: ltthinh
-//Date and time: 2026-03-14 17:38:07.453065
-//Module:  m_vlsi_csr
-//Function: Control & Status register
-//Page:    VLSI Technology
-//---------------------------------------
+// Project: APB-CSR-Generator
+// Generator: ltthinh
+// Date and time: 2026-03-15 14:23:48.414717
+// Module: m_vlsi_csr
+// Function: Control & Status register via APB interface
+// Page: VLSI Technology
+//--------------------------------------------------------------------
 module m_vlsi_csr # (
   localparam PARA_ABC_OFFSET = 16'h0,
   localparam PARA_DEF_OFFSET = 16'h4
@@ -27,6 +26,8 @@ module m_vlsi_csr # (
   output o_pslverr,
   output o_pready,
   output [31:0] o_prdata,
+  input i_reg_clk,
+  input i_reg_rstn,
   input i_abc_start0,
   output o_abc_start1,
   output o_abc_start2,
@@ -65,8 +66,22 @@ module m_vlsi_csr # (
   logic [31:0] nxt_prdata;
   logic reg_pready;
   logic [31:0] reg_prdata;
-  logic reg_apb_read_capture;
-  logic reg_apb_write_capture;
+  logic read_ack;
+  logic read_ack_bus_clk;
+  logic reg_read_req;
+  logic reg_read_ack_reg_clk_dly;
+  logic read_aclk_bus_clk_falling;
+  logic write_ack;
+  logic write_ack_bus_clk;
+  logic reg_write_req;
+  logic reg_write_ack_reg_clk_dly;
+  logic write_aclk_bus_clk_falling;
+  logic read_req_reg_clk;
+  logic reg_read_req_reg_clk_dly;
+  logic write_req_reg_clk;
+  logic reg_write_req_reg_clk_dly;
+  logic reg_read_ack_bus_clk_dly;
+  logic reg_write_ack_bus_clk_dly;
   logic we_abc;
   logic reg_abc_start1;
   logic nxt_abc_start1;
@@ -126,28 +141,108 @@ module m_vlsi_csr # (
   assign we_def = apb_write_en & (reg_address == PARA_DEF_OFFSET);
 
 
-  //APB read/write register (appear when option Async is not selected) - START
+  //APB handshake synchronization (appear when option Async is selected) - START
   //--------------------------------------------------------------------
-  //Reading phase
+  //Bus clock - reading phase
   //--------------------------------------------------------------------
+  m_vlsi_synch #(
+    .PARA_LEVELS (2)
+  ) u_read_ack_reg2bus (
+    .i_clk (i_bus_clk),
+    .i_rstn (i_bus_rstn),
+    .i_data_in (read_ack),
+    .o_data_out (read_ack_bus_clk)
+  );
   always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
     if(!i_bus_rstn) 
-      reg_apb_read_capture <= '0;
-    else
-      reg_apb_read_capture <= apb_read;
+      reg_read_req <= '0;
+    else begin
+      casez ({read_ack_bus_clk, apb_read})
+        2'b1?: reg_read_req <= '0;
+        2'b01: reg_read_req <= '1;
+        2'b00: reg_read_req <= reg_read_req;
+        default: reg_read_req <= 'x;
+      endcase
+    end
   end
-  assign apb_read_en = reg_apb_read_capture;
+  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
+    if(!i_bus_rstn) 
+      reg_read_ack_bus_clk_dly <= '0;
+    else
+      reg_read_ack_bus_clk_dly <= read_ack_bus_clk;
+  end
+  assign read_aclk_bus_clk_falling = reg_read_ack_bus_clk_dly & ~read_ack_bus_clk;
 
   //--------------------------------------------------------------------
-  //Writing phase
+  //Bus clock - writing phase
   //--------------------------------------------------------------------
+  m_vlsi_synch #(
+    .PARA_LEVELS (2)
+  ) u_write_ack_reg2bus (
+    .i_clk (i_bus_clk),
+    .i_rstn (i_bus_rstn),
+    .i_data_in (write_ack),
+    .o_data_out (write_ack_bus_clk)
+  );
   always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
     if(!i_bus_rstn) 
-      reg_apb_write_capture <= '0;
-    else
-      reg_apb_write_capture <= apb_write;
+      reg_write_req <= '0;
+    else begin
+      casez ({write_ack_bus_clk, apb_write})
+        2'b1?: reg_write_req <= '0;
+        2'b01: reg_write_req <= '1;
+        2'b00: reg_write_req <= reg_write_req;
+        default: reg_write_req <= 'x;
+      endcase
+    end
   end
-  assign apb_write_en = reg_apb_write_capture;
+  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
+    if(!i_bus_rstn) 
+      reg_write_ack_bus_clk_dly <= '0;
+    else
+      reg_write_ack_bus_clk_dly <= write_ack_bus_clk;
+  end
+  assign write_aclk_bus_clk_falling = reg_write_ack_bus_clk_dly & ~write_ack_bus_clk;
+
+  //--------------------------------------------------------------------
+  //Reg clock - reading handshake
+  //--------------------------------------------------------------------
+  m_vlsi_synch #(
+    .PARA_LEVELS (2)
+  ) u_rd_ack_reg2bus (
+    .i_clk (i_reg_clk),
+    .i_rstn (i_reg_rstn),
+    .i_data_in (reg_read_req),
+    .o_data_out (read_req_reg_clk)
+  );
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin
+    if(!i_reg_rstn) 
+      reg_read_req_reg_clk_dly <= '0;
+    else
+      reg_read_req_reg_clk_dly <= read_req_reg_clk;
+  end
+  assign apb_read_en = ~reg_read_req_reg_clk_dly & read_req_reg_clk;
+  assign read_ack = reg_read_req_reg_clk_dly;
+
+  //--------------------------------------------------------------------
+  //Reg clock - writing handshake
+  //--------------------------------------------------------------------
+  m_vlsi_synch #(
+    .PARA_LEVELS (2)
+  ) u_wr_ack_reg2bus (
+    .i_clk (i_reg_clk),
+    .i_rstn (i_reg_rstn),
+    .i_data_in (reg_write_req),
+    .o_data_out (write_req_reg_clk)
+  );
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin
+    if(!i_reg_rstn) 
+      reg_write_req_reg_clk_dly <= '0;
+    else
+      reg_write_req_reg_clk_dly <= write_req_reg_clk;
+  end
+  assign apb_write_en = ~reg_write_req_reg_clk_dly & write_req_reg_clk;
+  assign write_ack = reg_write_req_reg_clk_dly;
 
   //--------------------------------------------------------------------
   //PREADY phase
@@ -156,19 +251,18 @@ module m_vlsi_csr # (
     if(!i_bus_rstn) 
       reg_pready <= '0;
     else
-      reg_pready <= apb_write_en // reading complete
-                | apb_read_en // writing complete
+      reg_pready <= read_aclk_bus_clk_falling // reading complete
+                | write_aclk_bus_clk_falling // writing complete
                 | (apb_slverr & apb_setup & i_slverr_en);//slverr assert
   end
   assign o_pready = reg_pready;
-  
   //--------------------------------------------------------------------
 
   //Assignment for next value of abc_start1 rw
   assign nxt_abc_start1 = (we_abc) ? reg_pwdata[30] : reg_abc_start1;
   //FF for bit abc_start1
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_abc_start1 <= 1'h0;
     else
       reg_abc_start1 <= nxt_abc_start1;
@@ -179,8 +273,8 @@ module m_vlsi_csr # (
                         : (i_hw_we_abc_start2) ? i_hw_wdata_abc_start2
                         : reg_abc_start2;
   //FF for bit abc_start2
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_abc_start2 <= 1'h0;
     else
       reg_abc_start2 <= nxt_abc_start2;
@@ -189,8 +283,8 @@ module m_vlsi_csr # (
   //Assignment for next value of abc_start3 rw
   assign nxt_abc_start3 = (we_abc) ? reg_pwdata[28:27] : reg_abc_start3;
   //FF for bit abc_start3
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_abc_start3 <= 2'h0;
     else
       reg_abc_start3 <= nxt_abc_start3;
@@ -201,8 +295,8 @@ module m_vlsi_csr # (
                         : (i_hw_we_abc_start4) ? i_hw_wdata_abc_start4
                         : reg_abc_start4;
   //FF for bit abc_start4
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_abc_start4 <= 2'h0;
     else
       reg_abc_start4 <= nxt_abc_start4;
@@ -222,8 +316,8 @@ module m_vlsi_csr # (
   end  //Assignment for next value of def_start0 rw
   assign nxt_def_start0 = (we_def) ? reg_pwdata[31] : reg_def_start0;
   //FF for bit def_start0
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_def_start0 <= 1'h0;
     else
       reg_def_start0 <= nxt_def_start0;
@@ -234,8 +328,8 @@ module m_vlsi_csr # (
                         : (i_hw_we_def_start1) ? i_hw_wdata_def_start1
                         : reg_def_start1;
   //FF for bit def_start1
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_def_start1 <= 1'h0;
     else
       reg_def_start1 <= nxt_def_start1;
@@ -246,8 +340,8 @@ module m_vlsi_csr # (
                         : (i_hw_we_def_start2) ? i_hw_wdata_def_start2
                         : reg_def_start2;
   //FF for bit def_start2
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_def_start2 <= 1'h0;
     else
       reg_def_start2 <= nxt_def_start2;
@@ -258,8 +352,8 @@ module m_vlsi_csr # (
                         : (i_hw_we_def_start3) ? i_hw_wdata_def_start3
                         : reg_def_start3;
   //FF for bit def_start3
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_def_start3 <= 2'h0;
     else
       reg_def_start3 <= nxt_def_start3;
@@ -270,8 +364,8 @@ module m_vlsi_csr # (
                         : (i_hw_we_def_start4) ? i_hw_wdata_def_start4
                         : reg_def_start4;
   //FF for bit def_start4
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin //FF for each bit
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
+    if(!i_reg_rstn) 
       reg_def_start4 <= 2'h0;
     else
       reg_def_start4 <= nxt_def_start4;

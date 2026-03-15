@@ -1,3 +1,10 @@
+#--------------------------------------------------------------------
+# Project: APB-CSR-Generator
+# Author: Trthinh (Ethan)
+# Function: CSR Generation Tool
+# Page: VLSI Technology
+#---------------------------------------
+
 import sys
 import openpyxl
 import getpass
@@ -281,7 +288,7 @@ class apb_protocol:
   end
   always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
     if(!i_bus_rstn) 
-      reg_read_ack_reg_clk_dly <= '0;
+      reg_read_ack_bus_clk_dly <= '0;
     else
       reg_read_ack_bus_clk_dly <= read_ack_bus_clk;
   end
@@ -312,7 +319,7 @@ class apb_protocol:
   end
   always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
     if(!i_bus_rstn) 
-      reg_write_ack_reg_clk_dly <= '0;
+      reg_write_ack_bus_clk_dly <= '0;
     else
       reg_write_ack_bus_clk_dly <= write_ack_bus_clk;
   end
@@ -365,8 +372,8 @@ class apb_protocol:
     if(!i_bus_rstn) 
       reg_pready <= '0;
     else
-      reg_pready <= reg_read_ack_bus_clk_dly // reading complete
-                | reg_write_ack_bus_clk_dly // writing complete
+      reg_pready <= read_aclk_bus_clk_falling // reading complete
+                | write_aclk_bus_clk_falling // writing complete
                 | (apb_slverr & apb_setup & i_slverr_en);//slverr assert
   end
   assign o_pready = reg_pready;
@@ -488,8 +495,13 @@ class sfr:
 
 
         reg_json = reg_json[:-2]
-        self.json = f'''{bracket_o}
-    "Tool": "CSR Generation",
+        self.json = f'''    {bracket_o}
+    "Project": "APB-CSR-Generator",
+    "Module": "JSON debug file",
+    "Function": "Used to check the configuration after generation",
+    "Author": "Trthinh (Ethan)",
+    "Generator": "{getpass.getuser()}",
+    "Page": "VLSI Technology", 
     "Table - Configuration": [
     {bracket_o}
         "Module Name": "{self.module_name}",
@@ -506,14 +518,13 @@ class sfr:
     def gen_rtl(self):
         header = f'''`timescale 1ns/1ps
 //--------------------------------------------------------------------
-//Product of: VLSI Technology
-//Project: The UVM environemnt for UART (Universal Asynchronous Receiver Transmitter)
-//Generator: {getpass.getuser()}
-//Date and time: {str(datetime.now())}
-//Module:  {self.module_name}
-//Function: Control & Status register
-//Page:    VLSI Technology
-//---------------------------------------'''
+// Project: APB-CSR-Generator
+// Generator: {getpass.getuser()}
+// Date and time: {str(datetime.now())}
+// Module: {self.module_name}
+// Function: Control & Status register via APB interface
+// Page: VLSI Technology
+//--------------------------------------------------------------------'''
         localparam_offset = ''
         reg_rtl = ''
         reg_we = ''
@@ -554,10 +565,13 @@ endmodule: {self.module_name}'''
         self.tb = tb
 
 # MAIN FUNCTION
+print("Start the CSR Generation!")
+print("The register configured will be shown below!")
 current_path = os.getcwd()
 script_path = os.path.dirname(os.path.realpath(__file__))
 wb = openpyxl.load_workbook(argv[1])
-ws = wb['CSR']
+sheet_name = argv[2]
+ws = wb[sheet_name]
 start_config = 0
 start_reg = 0
 reg_list = []
@@ -611,7 +625,7 @@ for row in range(1,ws.max_row + 1):
             bit_type = ws[row][bit_type_col].value
             bit_reset = ws[row][reset_col].value
             bit_des = ws[row][des_col].value
-            print(reg_name, bit_name, bit_type)
+            print("Register: ", reg_name,", Bit name: ", bit_name, ", Bit Type: ", bit_type)
             b = bit(name=bit_name,
                     field=bit_field,
                     type=bit_type,
@@ -631,23 +645,34 @@ s.gen_rtl()
 
 print("The current path: ", current_path)
 print("The tool path: ", script_path)
+
 rtl_path = current_path + "/RTL"
-if os.path.exists(rtl_path):
-    shutil.rmtree(rtl_path)
+
 os.makedirs(rtl_path, exist_ok=True)
 with open (rtl_path + '/' + s.module_name + '.sv','w') as f:
     f.write(s.rtl)
-shutil.copytree(script_path + "/models", rtl_path + '/models')
+models_path = rtl_path + '/models'
+if os.path.exists(models_path):
+    shutil.copyfile(script_path + "/models/m_vlsi_synch.sv", models_path + "/m_vlsi_synch.sv")
+else:
+    shutil.copytree(script_path + "/models", rtl_path + '/models')
 with open (rtl_path + '/filelist.f','w') as f:
+    header_fl = f'''//--------------------------------------------------------------------
+// Project: APB-CSR-Generator
+// Module: RTL File List
+// Author: Trthinh (Ethan)
+// Function: Collect all RTL of APB-CSR-Generation Tool
+// Page: VLSI Technology
+//--------------------------------------------------------------------
+'''
+    f.write(header_fl)
     f.write(rtl_path + '/' + s.module_name + '.sv\n')
     f.write(rtl_path + '/models/m_vlsi_synch.sv')
 
 s.gen_json()
 debug_path = current_path + "/Debug"
-if os.path.exists(debug_path):
-    shutil.rmtree(debug_path)
 os.makedirs(debug_path, exist_ok=True)
 with open (debug_path + '/debug.json','w') as f:
     f.write(s.json)
             
-        
+print("End of the CSR generation! Thank you.")

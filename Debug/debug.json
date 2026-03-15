@@ -1,12 +1,17 @@
-{
-    "Tool": "CSR Generation",
+    {
+    "Project": "APB-CSR-Generator",
+    "Module": "JSON debug file",
+    "Function": "Used to check the configuration after generation",
+    "Author": "Trthinh (Ethan)",
+    "Generator": "ltthinh",
+    "Page": "VLSI Technology", 
     "Table - Configuration": [
     {
         "Module Name": "m_vlsi_csr",
         "Address Width": "16",
         "Data Width": "32",
         "Protocol": "APB",
-        "Asynchornous": "0"
+        "Asynchornous": "1"
     }
     ],
     "Table - Register Definition": [

@@ -1,0 +1,53 @@
+# Makefile for CSR Generator Testbench (Verilator) - Async Clock Version
+
+# Directories
+RTL_DIR    := $(CSR_GEN_HOME)/RTL
+SIM_ROOT   := $(CSR_GEN_HOME)/sim
+TESTS_DIR  := $(SIM_ROOT)/tests
+TEST       ?= csr_test
+TEST_DIR   := $(TESTS_DIR)/$(TEST)
+SIM_DIR    := $(shell pwd)
+OBJ_DIR    := $(SIM_DIR)/obj_dir
+TB_SRC     ?= $(TEST_DIR)/tb2.sv
+TB_LOCAL   := $(SIM_DIR)/tb2.sv
+
+# Tool
+VERILATOR ?= verilator
+
+# Source file lists
+RTL_FILELIST  = $(RTL_DIR)/filelist.f
+TB_LIB_SRCS   = $(SIM_ROOT)/lib/apb_slave_bfm.sv
+TB_BUILD_SRCS = $(TB_LIB_SRCS) $(TB_LOCAL)
+
+# Verilator flags
+VL_FLAGS = --binary \
+           --sv \
+           --top-module tb_csr \
+           --timing \
+           --trace \
+           --Mdir $(OBJ_DIR) \
+           -Wno-fatal
+
+# Build targets
+.PHONY: all simv run clean sync_tb lint
+
+all: simv
+
+simv: sync_tb $(RTL_FILELIST) $(TB_LIB_SRCS)
+	@mkdir -p $(SIM_DIR)
+	CSR_GEN_HOME=$(CSR_GEN_HOME) $(VERILATOR) $(VL_FLAGS) -f $(RTL_FILELIST) $(TB_BUILD_SRCS) -o $(SIM_DIR)/simv
+
+sync_tb:
+	@mkdir -p $(SIM_DIR)
+	@if [ ! -f "$(TB_LOCAL)" ] || ! cmp -s "$(TB_SRC)" "$(TB_LOCAL)"; then \
+		cp "$(TB_SRC)" "$(TB_LOCAL)"; \
+	fi
+
+run: simv
+	cd $(SIM_DIR) && ./simv
+
+lint:
+	$(CSR_GEN_HOME)/lint/verilator/run_lint.sh
+
+clean:
+	rm -rf $(OBJ_DIR) $(SIM_DIR)/simv $(SIM_DIR)/simv.d $(SIM_DIR)/tb2.sv $(SIM_DIR)/*.vcd $(SIM_DIR)/*.log

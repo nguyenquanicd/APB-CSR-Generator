@@ -1,7 +1,11 @@
 `timescale 1ns/1ps
-//Author: Aurelian
-//Project: CSR Generation tool
-//Group: aQ-ent
+//--------------------------------------------------------------------
+// Project: APB-CSR-Generator
+// Module: Synchronizer module
+// Author: Trthinh
+// Function: Synchronize the asynchronous signal
+// Page: VLSI Technology
+//---------------------------------------'''
 
 module m_vlsi_synch #(
   parameter PARA_LEVELS = 2
