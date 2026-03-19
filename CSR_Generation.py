@@ -48,6 +48,7 @@ class register:
         self.bit = bit_list
         self.port_list = []
         self.logic_list = []
+        self.we_rtl = ''
         self.gen_port_logic()
         self.lcparam = f"  localparam PARA_{self.name.upper()}_OFFSET = 16'h{self.offset[2:]},\n"
         self.rtl = ''
@@ -596,11 +597,11 @@ for row in range(1,ws.max_row + 1):
             if 'Protocol' in str(ws[row][start_col].value):
                 protocol = ws[row][start_col + 1].value
             if 'Data Width' in str(ws[row][start_col].value):
-                data_wd = ws[row][start_col + 1].value
+                data_wd = int(ws[row][start_col + 1].value)
             if 'Address Width' in str(ws[row][start_col].value):
-                addr_wd = ws[row][start_col + 1].value
+                addr_wd = int(ws[row][start_col + 1].value)
             if 'Asynchronous' in str(ws[row][start_col].value):
-               async_option = ws[row][start_col + 1].value
+               async_option = int(ws[row][start_col + 1].value)
             if 'REGISTER' in str(ws[row][start_col].value):
                start_reg = 1
     else:
