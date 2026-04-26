@@ -231,9 +231,9 @@ class apb_protocol:
   //APB general access phase assignment - START
   assign apb_setup = i_psel & ~i_penable;
   assign apb_protect = i_protect_en ? ~i_pprot[1] : 1'b1;
-  assign apb_slverr = ~apb_protect      //error in protection
+  assign apb_slverr = i_slverr_en ? (~apb_protect      //error in protection
                       | (|i_paddr[1:0]) //error in address 
-                      | (~&i_pstrb);    //error in pstrb signal
+                      | (~&i_pstrb & i_pwrite)) : 1'b0;    //error in pstrb signal
   assign apb_complete = apb_setup & (~apb_slverr);
   assign apb_write = i_pwrite & apb_complete;
   assign apb_read = ~i_pwrite & apb_complete; 
@@ -375,7 +375,7 @@ class apb_protocol:
     else
       reg_pready <= read_aclk_bus_clk_falling // reading complete
                 | write_aclk_bus_clk_falling // writing complete
-                | (apb_slverr & apb_setup & i_slverr_en);//slverr assert
+                | (apb_slverr & apb_setup);//slverr assert
   end
   assign o_pready = reg_pready;
   //--------------------------------------------------------------------'''
@@ -413,7 +413,7 @@ class apb_protocol:
     else
       reg_pready <= apb_write_en // reading complete
                 | apb_read_en // writing complete
-                | (apb_slverr & apb_setup & i_slverr_en);//slverr assert
+                | (apb_slverr & apb_setup);//slverr assert
   end
   assign o_pready = reg_pready;
   
