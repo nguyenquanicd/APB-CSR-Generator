@@ -143,6 +143,8 @@ module tb_csr;
   initial begin
     integer i;
     logic [31:0] rdata;
+    logic [31:0] cdc_wpat;
+    logic [31:0] cdc_expected;
 
     $display("========================================");
     $display("m_vlsi_csr CSR Module Test");
@@ -300,7 +302,29 @@ module tb_csr;
     apb_write(PARA_DEF_OFFSET, 32'h28000000);  // Write 1 to bit[29] only
     `ASSERT_EQ(o_def_start2, 1'b0, "def_start2 should be 0 after clearing by APB");
     `ASSERT_EQ(o_def_start3, 2'b10, "only def_start3[0] is cleared");
-    
+
+    // Test 13: CDC data-integrity stress test.
+    // Regression for the o_prdata async resync fix: reg_prdata now latches
+    // in the i_reg_clk domain (qualified by apb_read_en, same domain) and
+    // is resynced into i_bus_clk via reg_prdata_bus, gated by the already
+    // bus-clock-synchronized read_aclk_bus_clk_falling pulse. Before the
+    // fix, apb_read_en (an i_reg_clk-domain pulse) directly gated an
+    // i_bus_clk-domain FF, so a fast, back-to-back write/read burst across
+    // the deliberately non-integer-ratio i_bus_clk/i_reg_clk periods
+    // (10ns/15ns) could catch o_prdata holding stale data even while
+    // o_pready correctly reported completion. This loop alternates full
+    // 0/1 write patterns with no extra settle time between transactions to
+    // maximize handshake toggle rate and catch any such miss.
+    $display("\n--- Test 13: CDC data-integrity stress (back-to-back reads) ---");
+    i_hw_we_abc_start2 = 1'b0;
+    i_hw_we_abc_start4 = 1'b0;
+    for (i = 0; i < 20; i = i + 1) begin
+      cdc_wpat = i[0] ? 32'hFFFF_FFFF : 32'h0000_0000;
+      apb_write(PARA_ABC_OFFSET, cdc_wpat);
+      apb_read(PARA_ABC_OFFSET, rdata);
+      cdc_expected = {1'b0, cdc_wpat[30:25], 25'h0}; // bit31=i_abc_start0(0), bits24:0=reserved(0)
+      `ASSERT_EQ(rdata, cdc_expected, $sformatf("CDC stress iter %0d: prdata must reflect last write as soon as pready asserts", i));
+    end
 
     // Summary
     #20;

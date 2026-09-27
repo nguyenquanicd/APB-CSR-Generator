@@ -17,7 +17,7 @@
     "Table - Register Definition": [
         {
         "Register Name": "abc",
-        "Offset": "0x0",
+        "Offset": "0x0000",
         "Reset Value": "0x0",
         "Descriprtion": "None",
         "Bits": [
@@ -26,134 +26,92 @@
                 "Bit Type": "ro",
                 "Bit Field": "[31]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "External status bit, driven by i_abc_start0."
             },
             {
                 "Bit Name": "start1",
                 "Bit Type": "rw",
                 "Bit Field": "[30]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Software start control bit 1."
             },
             {
                 "Bit Name": "start2",
                 "Bit Type": "rwi",
                 "Bit Field": "[29]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Software/hardware start control bit 2."
             },
             {
                 "Bit Name": "start3",
                 "Bit Type": "rw",
                 "Bit Field": "[28:27]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Software start control field 3."
             },
             {
                 "Bit Name": "start4",
                 "Bit Type": "rwi",
                 "Bit Field": "[26:25]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Software/hardware start control field 4."
             },
             {
                 "Bit Name": "reserved",
                 "Bit Type": "ro",
                 "Bit Field": "[24:0]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Reserved. Read-as-zero, write ignore."
             }
           ]
         },
         {
         "Register Name": "def",
-        "Offset": "0x4",
+        "Offset": "0x0004",
         "Reset Value": "0x0",
         "Descriprtion": "None",
         "Bits": [
             {
                 "Bit Name": "start0",
-                "Bit Type": "ro",
-                "Bit Field": "[31]",
-                "Reset Value": "0x0",
-                "Description": "None"
-            },
-            {
-                "Bit Name": "start1",
-                "Bit Type": "rw",
-                "Bit Field": "[30]",
-                "Reset Value": "0x0",
-                "Description": "None"
-            },
-            {
-                "Bit Name": "start2",
-                "Bit Type": "rwi",
-                "Bit Field": "[29]",
-                "Reset Value": "0x0",
-                "Description": "None"
-            },
-            {
-                "Bit Name": "start3",
-                "Bit Type": "rw",
-                "Bit Field": "[28:27]",
-                "Reset Value": "0x0",
-                "Description": "None"
-            },
-            {
-                "Bit Name": "start4",
-                "Bit Type": "rwi",
-                "Bit Field": "[26:25]",
-                "Reset Value": "0x0",
-                "Description": "None"
-            },
-            {
-                "Bit Name": "reserved",
-                "Bit Type": "ro",
-                "Bit Field": "[24:0]",
-                "Reset Value": "0x0",
-                "Description": "None"
-            },
-            {
-                "Bit Name": "start0",
                 "Bit Type": "rw",
                 "Bit Field": "[31]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Software start control bit 0."
             },
             {
                 "Bit Name": "start1",
                 "Bit Type": "rwi",
                 "Bit Field": "[30]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Software/hardware start control bit 1."
             },
             {
                 "Bit Name": "start2",
                 "Bit Type": "w1c",
                 "Bit Field": "[29]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Write-1-to-clear status bit 2."
             },
             {
                 "Bit Name": "start3",
                 "Bit Type": "w1c",
                 "Bit Field": "[28:27]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Write-1-to-clear status field 3."
             },
             {
                 "Bit Name": "start4",
                 "Bit Type": "rwi",
                 "Bit Field": "[26:25]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Software/hardware start control field 4."
             },
             {
                 "Bit Name": "reserved",
                 "Bit Type": "ro",
                 "Bit Field": "[24:0]",
                 "Reset Value": "0x0",
-                "Description": "None"
+                "Description": "Reserved. Read-as-zero, write ignore."
             }
           ]
         }

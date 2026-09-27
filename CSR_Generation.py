@@ -215,6 +215,8 @@ class apb_protocol:
             self.logic_list.append (port("reg_write_req_reg_clk_dly","logic",1))
             self.logic_list.append (port("reg_read_ack_bus_clk_dly","logic",1))
             self.logic_list.append (port("reg_write_ack_bus_clk_dly","logic",1))
+
+            self.logic_list.append (port("reg_prdata_bus","logic",self.data_wd))
         else:
             self.logic_list.append (port("reg_apb_read_capture","logic",1))
             self.logic_list.append (port("reg_apb_write_capture","logic",1))
@@ -434,8 +436,29 @@ class apb_protocol:
             decoder = decoder.replace(flag, space + "PARA_" + r.name.upper() + "_OFFSET: nxt_prdata = " + r.name + "_value;\n" + flag) 
             
         rtl_prdata += decoder
-        rtl_prdata += '''  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
-    if(!i_bus_rstn) 
+        if int(self.async_option):
+            rtl_prdata += '''  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin
+    if(!i_reg_rstn)
+      reg_prdata <= '0;
+    else if (apb_read_en)
+      reg_prdata <= nxt_prdata;
+  end
+  //--------------------------------------------------------------------
+  //PRDATA resync to bus clock: reg_prdata is quasi-static (only updates
+  //once per read, well before this fires) so it is safe to sample here
+  //using the already bus-clock-synchronized read_aclk_bus_clk_falling
+  //pulse, without a dedicated bit synchronizer.
+  //--------------------------------------------------------------------
+  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
+    if(!i_bus_rstn)
+      reg_prdata_bus <= '0;
+    else if (read_aclk_bus_clk_falling)
+      reg_prdata_bus <= reg_prdata;
+  end
+  assign o_prdata = reg_prdata_bus;\n'''
+        else:
+            rtl_prdata += '''  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
+    if(!i_bus_rstn)
       reg_prdata <= '0;
     else if (apb_read_en)
       reg_prdata <= nxt_prdata;
@@ -473,10 +496,10 @@ class sfr:
                 self.logic_rtl += lr.rtl
     def gen_json(self):
         reg_json = ''
-        bit_json = ''
         bracket_o = "{"
         bracket_c = "}"
         for r in self.reg_list:
+            bit_json = ''
             reg_json += f'''        {bracket_o}
         "Register Name": "{r.name}",
         "Offset": "{r.offset}",

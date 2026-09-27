@@ -1,15 +1,15 @@
 `timescale 1ns/1ps
 //--------------------------------------------------------------------
 // Project: APB-CSR-Generator
-// Generator: Lenovo
-// Date and time: 2026-03-15 17:26:28.696912
+// Generator: ltthinh
+// Date and time: 2026-09-20 22:53:57.191537
 // Module: m_vlsi_async_csr
 // Function: Control & Status register via APB interface
 // Page: VLSI Technology
 //--------------------------------------------------------------------
 module m_vlsi_async_csr # (
-  localparam PARA_ABC_OFFSET = 16'h0,
-  localparam PARA_DEF_OFFSET = 16'h4
+  localparam PARA_ABC_OFFSET = 16'h0000,
+  localparam PARA_DEF_OFFSET = 16'h0004
 
 )(
   input i_bus_clk,
@@ -82,6 +82,7 @@ module m_vlsi_async_csr # (
   logic reg_write_req_reg_clk_dly;
   logic reg_read_ack_bus_clk_dly;
   logic reg_write_ack_bus_clk_dly;
+  logic [31:0] reg_prdata_bus;
   logic we_abc;
   logic reg_abc_start1;
   logic nxt_abc_start1;
@@ -109,9 +110,9 @@ module m_vlsi_async_csr # (
   //APB general access phase assignment - START
   assign apb_setup = i_psel & ~i_penable;
   assign apb_protect = i_protect_en ? ~i_pprot[1] : 1'b1;
-  assign apb_slverr = ~apb_protect      //error in protection
+  assign apb_slverr = i_slverr_en ? (~apb_protect      //error in protection
                       | (|i_paddr[1:0]) //error in address 
-                      | (~&i_pstrb);    //error in pstrb signal
+                      | (~&i_pstrb & i_pwrite)) : 1'b0;    //error in pstrb signal
   assign apb_complete = apb_setup & (~apb_slverr);
   assign apb_write = i_pwrite & apb_complete;
   assign apb_read = ~i_pwrite & apb_complete; 
@@ -253,7 +254,7 @@ module m_vlsi_async_csr # (
     else
       reg_pready <= read_aclk_bus_clk_falling // reading complete
                 | write_aclk_bus_clk_falling // writing complete
-                | (apb_slverr & apb_setup & i_slverr_en);//slverr assert
+                | (apb_slverr & apb_setup);//slverr assert
   end
   assign o_pready = reg_pready;
   //--------------------------------------------------------------------
@@ -393,12 +394,24 @@ module m_vlsi_async_csr # (
       default nxt_prdata = '0;
     endcase
   end
-  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
-    if(!i_bus_rstn) 
+  always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin
+    if(!i_reg_rstn)
       reg_prdata <= '0;
     else if (apb_read_en)
       reg_prdata <= nxt_prdata;
   end
-  assign o_prdata = reg_prdata;
+  //--------------------------------------------------------------------
+  //PRDATA resync to bus clock: reg_prdata is quasi-static (only updates
+  //once per read, well before this fires) so it is safe to sample here
+  //using the already bus-clock-synchronized read_aclk_bus_clk_falling
+  //pulse, without a dedicated bit synchronizer.
+  //--------------------------------------------------------------------
+  always_ff @ (posedge i_bus_clk, negedge i_bus_rstn) begin
+    if(!i_bus_rstn)
+      reg_prdata_bus <= '0;
+    else if (read_aclk_bus_clk_falling)
+      reg_prdata_bus <= reg_prdata;
+  end
+  assign o_prdata = reg_prdata_bus;
 
 endmodule: m_vlsi_async_csr
