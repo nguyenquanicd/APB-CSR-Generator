@@ -2,6 +2,9 @@
 # Synopsys Lint Run Script
 #------------------------------------------------------------------------------
 
+# The paths of filelist.f are relative to the folder of that file.
+cd $::env(CSR_GEN_HOME)/RTL
+
 # Project inputs
 set FILELIST   $::env(CSR_GEN_HOME)/RTL/filelist.f
 set DEFINES    ""

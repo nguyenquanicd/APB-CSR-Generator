@@ -3,8 +3,9 @@
     "Module": "JSON debug file",
     "Function": "Used to check the configuration after generation",
     "Author": "Trthinh (Ethan)",
-    "Generator": "ltthinh",
-    "Page": "VLSI Technology", 
+    "Generator": "PC",
+    "Generator version": "2.0",
+    "Page": "VLSI Technology",
     "Table - Configuration": [
     {
         "Module Name": "m_vlsi_csr",

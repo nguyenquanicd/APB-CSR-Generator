@@ -20,9 +20,9 @@
     /* one hue per clock domain (this project has 2 real clocks + the
        structures that bridge them) — accent bars are colored by domain,
        not by module role; role stays a plain-text kicker label instead. */
-    --dom-bus:   #2a78d6;  /* blue   — i_bus_clk domain */
-    --dom-cross: #eb6834;  /* orange — bridges i_bus_clk <-> i_reg_clk */
-    --dom-reg:   #1baf7a;  /* aqua   — i_reg_clk domain */
+    --dom-bus:   #2a78d6;  /* blue   — i_clk_apb domain */
+    --dom-cross: #eb6834;  /* orange — bridges i_clk_apb <-> i_clk_reg */
+    --dom-reg:   #1baf7a;  /* aqua   — i_clk_reg domain */
     --ext:       #52514e;  /* neutral — off-chip / HW-side actor pills */
 
     --wire:     #c3c2b7;
@@ -221,9 +221,9 @@
   <div class="hero">
     <h2>How an APB write/read becomes a CSR bit</h2>
     <p>
-      A single-cycle SETUP-phase pulse (<code>i_psel &amp; ~i_penable</code>) captures the address/write-data and
-      kicks off a two-way req/ack handshake across the <code>i_bus_clk</code> ↔ <code>i_reg_clk</code> boundary —
-      the register bits themselves live entirely in the <code>reg_clk</code> domain, and <code>o_prdata</code> is
+      A single-cycle SETUP-phase pulse (<code>i_apb_psel &amp; ~i_apb_penable</code>) captures the address/write-data and
+      kicks off a two-way req/ack handshake across the <code>i_clk_apb</code> ↔ <code>i_clk_reg</code> boundary —
+      the register bits themselves live entirely in the <code>reg_clk</code> domain, and <code>o_apb_prdata</code> is
       resynced back to <code>bus_clk</code> using the same handshake pulse (the CDC fix from Revision 1.1) rather
       than a dedicated bit synchronizer. Blocks are colored by which clock domain they belong to — see the legend
       below. <b>Note:</b> as generated today, <code>m_vlsi_csr.sv</code> and <code>m_vlsi_async_csr.sv</code> are
@@ -240,9 +240,9 @@
   </div>
 
   <div class="legend">
-    <div class="item"><span class="swatch" style="background:var(--dom-bus)"></span>i_bus_clk domain</div>
-    <div class="item"><span class="swatch" style="background:var(--dom-cross)"></span>Bridges i_bus_clk ↔ i_reg_clk</div>
-    <div class="item"><span class="swatch" style="background:var(--dom-reg)"></span>i_reg_clk domain</div>
+    <div class="item"><span class="swatch" style="background:var(--dom-bus)"></span>i_clk_apb domain</div>
+    <div class="item"><span class="swatch" style="background:var(--dom-cross)"></span>Bridges i_clk_apb ↔ i_clk_reg</div>
+    <div class="item"><span class="swatch" style="background:var(--dom-reg)"></span>i_clk_reg domain</div>
     <div class="item"><span class="swatch" style="background:var(--ext)"></span>Off-chip / HW-side actor</div>
   </div>
 
@@ -263,7 +263,7 @@
 
 <footer>
   Generated from <code>RTL/m_vlsi_csr.sv</code> / <code>RTL/m_vlsi_async_csr.sv</code> and
-  <code>RTL/models/m_vlsi_synch.sv</code> — a simplified presentation view; consult the RTL directly for exact
+  <code>RTL/models/m_csr_sync.sv</code> — a simplified presentation view; consult the RTL directly for exact
   port/bit accuracy.
 </footer>
 
@@ -285,15 +285,15 @@
 
     { id: "decode", kind: "control", domain: "bus_clk", x: 230, y: 30, w: 220, h: 190,
       label: "APB Decode & Capture", sub: "bus_clk domain — setup / protect / slverr / addr & wdata FFs",
-      desc: "Combinational apb_setup/apb_protect/apb_slverr/apb_complete off i_psel/i_penable/i_pprot/i_paddr/i_pstrb, plus bus_clk FFs that capture reg_address and reg_pwdata on the SETUP pulse and latch reg_slverr → o_pslverr. Also decodes we_abc/we_def from reg_address once apb_write_en arrives back from the CDC block." },
+      desc: "Combinational w_apb_setup/apb_protect/w_apb_slverr/apb_complete off i_apb_psel/i_apb_penable/i_apb_pprot/i_apb_paddr/i_apb_pstrb, plus bus_clk FFs that capture reg_addr and reg_pwdata on the SETUP pulse and latch reg_slverr → o_apb_pslverr. Also decodes we_abc/we_def from reg_addr once w_wr_en arrives back from the CDC block." },
 
     { id: "cdc", kind: "cdc", domain: "crossing", x: 230, y: 300, w: 220, h: 190,
-      label: "CDC Handshake", sub: "bus_clk ↔ reg_clk — 4× m_vlsi_synch 2-FF req/ack toggle",
-      desc: "The actual crossing structure: toggles reg_read_req/reg_write_req in bus_clk on apb_read/apb_write, synchronizes each across to reg_clk (and the ack back to bus_clk) through m_vlsi_synch 2-flop instances, producing apb_read_en/apb_write_en in reg_clk and the read/write-complete falling-edge pulses back in bus_clk that drive PREADY." },
+      label: "CDC Handshake", sub: "bus_clk ↔ reg_clk — 4× m_csr_sync 2-FF req/ack toggle",
+      desc: "The actual crossing structure: toggles reg_read_req/reg_write_req in bus_clk on apb_read/apb_write, synchronizes each across to reg_clk (and the ack back to bus_clk) through m_csr_sync 2-flop instances, producing w_rd_en/w_wr_en in reg_clk and the read/write-complete falling-edge pulses back in bus_clk that drive PREADY." },
 
     { id: "pready", kind: "hub", domain: "bus_clk", x: 590, y: 30, w: 210, h: 110,
       label: "PREADY / PSLVERR Gen", sub: "bus_clk domain",
-      desc: "reg_pready registers high on a read/write-complete falling-edge pulse from the CDC block, or immediately on apb_slverr & apb_setup — o_pslverr comes from the decode block's own reg_slverr latch, not from this block." },
+      desc: "reg_pready registers high on a read/write-complete falling-edge pulse from the CDC block, or immediately on w_apb_slverr & w_apb_setup — o_apb_pslverr comes from the decode block's own reg_slverr latch, not from this block." },
 
     { id: "abc", kind: "storage", domain: "reg_clk", x: 590, y: 210, w: 210, h: 110,
       label: "ABC Register Bank", sub: "reg_clk domain — offset 0x0000, start1 rw · start2 rwi · start3 rw · start4 rwi",
@@ -305,7 +305,7 @@
 
     { id: "prdata", kind: "hub", domain: "crossing", x: 930, y: 230, w: 230, h: 190,
       label: "PRDATA Mux + Resync", sub: "bus_clk ↔ reg_clk — reg_clk mux → bus_clk resync (v1.1 CDC fix)",
-      desc: "reg_address selects abc_value/def_value into nxt_prdata; reg_prdata latches it in reg_clk on apb_read_en. reg_prdata_bus then resyncs that quasi-static value into bus_clk using the already-synchronized read_aclk_bus_clk_falling pulse, driving o_prdata — this is the CDC bug fixed in Revision 1.1." },
+      desc: "reg_addr selects abc_value/def_value into w_rdata_nxt; reg_rdata latches it in reg_clk on w_rd_en. reg_rdata_bus then resyncs that quasi-static value into bus_clk using the already-synchronized w_rd_ack_fall pulse, driving o_apb_prdata — this is the CDC bug fixed in Revision 1.1." },
   ];
 
   var wires = [
@@ -314,20 +314,20 @@
     ["decode", "b1", "cdc", "t1", "apb_read/write", null, -14],
     ["cdc", "t2", "decode", "b2", "read_en/write_en", null, 14],
 
-    ["decode", "r1", "pready", "l1", "apb_slverr", 0.4],
+    ["decode", "r1", "pready", "l1", "w_apb_slverr", 0.4],
     ["cdc", "r1", "pready", "l2", "rd/wr complete", 0.35],
 
     ["decode", "r2", "abc", "l1", "we_abc", 0.45],
     ["decode", "r3", "def", "l1", "we_def", 0.5],
-    ["decode", "r4", "prdata", "l1", "reg_address", 0.72],
+    ["decode", "r4", "prdata", "l1", "reg_addr", 0.72],
 
-    ["cdc", "r2", "prdata", "l2", "apb_read_en + resync", 0.6],
+    ["cdc", "r2", "prdata", "l2", "w_rd_en + resync", 0.6],
     ["abc", "r1", "prdata", "l3", "abc_value", 0.5],
     ["def", "r1", "prdata", "l4", "def_value", 0.5],
 
-    ["decode", "l2", "apbm", "r2", "o_pslverr", 0.35],
-    ["pready", "l3", "apbm", "r3", "o_pready", 0.3],
-    ["prdata", "l5", "apbm", "r4", "o_prdata", 0.25],
+    ["decode", "l2", "apbm", "r2", "o_apb_pslverr", 0.35],
+    ["pready", "l3", "apbm", "r3", "o_apb_pready", 0.3],
+    ["prdata", "l5", "apbm", "r4", "o_apb_prdata", 0.25],
 
     ["hw", "l1", "abc", "r2", "hw → abc (start0,2,4)", 0.85],
     ["abc", "r3", "hw", "l2", "abc → hw (start1..4)", 0.2],

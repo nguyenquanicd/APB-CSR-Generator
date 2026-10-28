@@ -12,13 +12,13 @@ module apb_slave_bfm #(
 ) (
     input  logic        i_clk,
     input  logic        i_rst_n,
-    input  logic [15:0] i_paddr,
-    input  logic [31:0] i_pwdata,
-    output logic [31:0] o_prdata,
-    input  logic        i_pwrite,
-    input  logic        i_psel,
-    input  logic        i_penable,
-    output logic        o_pready
+    input  logic [15:0] i_apb_paddr,
+    input  logic [31:0] i_apb_pwdata,
+    output logic [31:0] o_apb_prdata,
+    input  logic        i_apb_pwrite,
+    input  logic        i_apb_psel,
+    input  logic        i_apb_penable,
+    output logic        o_apb_pready
 );
 
   localparam integer PARA_DMEM_ADDR_W = $clog2(PARA_DMEM_DEPTH);
@@ -54,30 +54,30 @@ module apb_slave_bfm #(
       apb_req_addr  <= 16'h0;
       apb_req_wdata <= 32'h0;
       apb_wait_cnt  <= 0;
-      o_prdata      <= 32'h0;
-      o_pready      <= 1'b0;
+      o_apb_prdata      <= 32'h0;
+      o_apb_pready      <= 1'b0;
       for (i = 0; i < PARA_DMEM_DEPTH; i = i + 1) begin
         dmem[i] <= 32'h0;
       end
     end else begin
-      o_pready <= 1'b0;
+      o_apb_pready <= 1'b0;
 
       // Setup phase capture
-      if (i_psel && !i_penable) begin
+      if (i_apb_psel && !i_apb_penable) begin
         apb_req_valid <= 1'b1;
-        apb_req_write <= i_pwrite;
-        apb_req_addr  <= i_paddr;
-        apb_req_wdata <= i_pwdata;
+        apb_req_write <= i_apb_pwrite;
+        apb_req_addr  <= i_apb_paddr;
+        apb_req_wdata <= i_apb_pwdata;
         apb_wait_cnt  <= PARA_APB_WAIT_STATES;
       end
 
       // Access phase response/handshake
-      if (apb_req_valid && i_psel && i_penable) begin
+      if (apb_req_valid && i_apb_psel && i_apb_penable) begin
         if (apb_wait_cnt > 0) begin
           apb_wait_cnt <= apb_wait_cnt - 1;
         end else begin
-          o_pready <= 1'b1;
-          o_prdata <= apb_read_data;
+          o_apb_pready <= 1'b1;
+          o_apb_prdata <= apb_read_data;
 
           if (apb_req_write && apb_addr_in_range) begin
             dmem[apb_req_word_idx] <= apb_req_wdata;

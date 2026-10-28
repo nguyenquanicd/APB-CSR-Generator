@@ -2,12 +2,12 @@
 
 //------------------------------------------------------------------------------
 // Testbench: m_vlsi_csr CDC edge-case testbench
-// Description: Same test sequence as csr_test/tb2.sv, but with i_reg_clk
-// deliberately much FASTER than i_bus_clk (3ns vs 10ns), so that a single
-// i_reg_clk-domain enable pulse is narrower than one i_bus_clk period. This
-// is the specific ratio needed to expose the o_prdata cross-domain bug
-// fixed in CSR_Generation.py (apb_read_en, generated in the i_reg_clk
-// domain, used to directly gate an i_bus_clk-domain capture FF): with
+// Description: Same test sequence as csr_test/tb2.sv, but with i_clk_reg
+// deliberately much FASTER than i_clk_apb (3ns vs 10ns), so that a single
+// i_clk_reg-domain enable pulse is narrower than one i_clk_apb period. This
+// is the specific ratio needed to expose the o_apb_prdata cross-domain bug
+// fixed in CSR_Generation.py (apb_read_en, generated in the i_clk_reg
+// domain, used to directly gate an i_clk_apb-domain capture FF): with
 // csr_test/tb2.sv's 10ns/15ns ratio, the reg_clk pulse is always wider
 // than one bus_clk period and the miss can never be observed in
 // zero-delay simulation, so that config alone is not a discriminating
@@ -23,22 +23,22 @@ module tb_csr;
   localparam integer PARA_CLK_REG_PERIOD = 3;
 
   // Testbench signals
-  reg          i_bus_clk;
-  reg          i_bus_rstn;
-  reg          i_reg_clk;
-  reg          i_reg_rstn;
-  reg  [15:0]  i_paddr;
+  reg          i_clk_apb;
+  reg          i_rst_n_apb;
+  reg          i_clk_reg;
+  reg          i_rst_n_reg;
+  reg  [15:0]  i_apb_paddr;
   reg          i_protect_en;
   reg          i_slverr_en;
-  reg  [2:0]   i_pprot;
-  reg  [31:0]  i_pwdata;
-  reg          i_pwrite;
-  reg          i_penable;
-  reg          i_psel;
-  reg  [3:0]   i_pstrb;
-  wire         o_pslverr;
-  wire         o_pready;
-  wire [31:0]  o_prdata;
+  reg  [2:0]   i_apb_pprot;
+  reg  [31:0]  i_apb_pwdata;
+  reg          i_apb_pwrite;
+  reg          i_apb_penable;
+  reg          i_apb_psel;
+  reg  [3:0]   i_apb_pstrb;
+  wire         o_apb_pslverr;
+  wire         o_apb_pready;
+  wire [31:0]  o_apb_prdata;
   reg          i_abc_start0;
   wire         o_abc_start1;
   wire         o_abc_start2;
@@ -71,63 +71,63 @@ module tb_csr;
   m_vlsi_csr dut (.*);
 
   // Clock generation
-  initial i_bus_clk = 1'b0;
-  always #(PARA_CLK_PERIOD/2) i_bus_clk = ~i_bus_clk;
-  initial i_reg_clk = 1'b0;
-  always #(PARA_CLK_REG_PERIOD/2) i_reg_clk = ~i_reg_clk;
+  initial i_clk_apb = 1'b0;
+  always #(PARA_CLK_PERIOD/2) i_clk_apb = ~i_clk_apb;
+  initial i_clk_reg = 1'b0;
+  always #(PARA_CLK_REG_PERIOD/2) i_clk_reg = ~i_clk_reg;
 
   // Helper tasks
   task wait_posedge;
-    @(posedge i_bus_clk);
+    @(posedge i_clk_apb);
   endtask
 
   task sys_reset;
-    i_bus_rstn = 1'b0;
+    i_rst_n_apb = 1'b0;
     repeat(3) wait_posedge;
-    @(negedge i_bus_clk);
-    i_bus_rstn = 1'b1;
+    @(negedge i_clk_apb);
+    i_rst_n_apb = 1'b1;
   endtask
   task sys2_reset;
-    i_reg_rstn = 1'b0;
+    i_rst_n_reg = 1'b0;
     repeat(3) wait_posedge;
-    @(negedge i_reg_clk);
-    i_reg_rstn = 1'b1;
+    @(negedge i_clk_reg);
+    i_rst_n_reg = 1'b1;
   endtask
 
   task apb_write(input [15:0] addr, input [31:0] wdata);
-    @(negedge i_bus_clk);
-    i_psel    = 1'b1;
-    i_penable = 1'b0;
-    i_pwrite  = 1'b1;
-    i_paddr   = addr;
-    i_pwdata  = wdata;
-    i_pstrb   = 4'b1111;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b1;
+    i_apb_penable = 1'b0;
+    i_apb_pwrite  = 1'b1;
+    i_apb_paddr   = addr;
+    i_apb_pwdata  = wdata;
+    i_apb_pstrb   = 4'b1111;
     wait_posedge;
-    @(negedge i_bus_clk);
-    i_penable = 1'b1;
+    @(negedge i_clk_apb);
+    i_apb_penable = 1'b1;
     wait_posedge;
-    while (!o_pready) wait_posedge;
-    @(negedge i_bus_clk);
-    i_psel    = 1'b0;
-    i_penable = 1'b0;
+    while (!o_apb_pready) wait_posedge;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b0;
+    i_apb_penable = 1'b0;
   endtask
 
   task apb_read(input [15:0] addr, output [31:0] rdata);
-    @(negedge i_bus_clk);
-    i_psel    = 1'b1;
-    i_penable = 1'b0;
-    i_pwrite  = 1'b0;
-    i_paddr   = addr;
-    i_pstrb   = 4'b1111;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b1;
+    i_apb_penable = 1'b0;
+    i_apb_pwrite  = 1'b0;
+    i_apb_paddr   = addr;
+    i_apb_pstrb   = 4'b1111;
     wait_posedge;
-    @(negedge i_bus_clk);
-    i_penable = 1'b1;
+    @(negedge i_clk_apb);
+    i_apb_penable = 1'b1;
     wait_posedge;
-    while (!o_pready) wait_posedge;
-    rdata = o_prdata;
-    @(negedge i_bus_clk);
-    i_psel    = 1'b0;
-    i_penable = 1'b0;
+    while (!o_apb_pready) wait_posedge;
+    rdata = o_apb_prdata;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b0;
+    i_apb_penable = 1'b0;
   endtask
 
   // Assertion macros
@@ -163,13 +163,13 @@ module tb_csr;
     // Initialize inputs
     i_protect_en           = 1'b0;
     i_slverr_en            = 1'b1;
-    i_pprot                = 3'b000;
-    i_psel                 = 1'b0;
-    i_penable              = 1'b0;
-    i_pwrite               = 1'b0;
-    i_paddr                = 16'h0;
-    i_pwdata               = 32'h0;
-    i_pstrb                = 4'b1111;
+    i_apb_pprot                = 3'b000;
+    i_apb_psel                 = 1'b0;
+    i_apb_penable              = 1'b0;
+    i_apb_pwrite               = 1'b0;
+    i_apb_paddr                = 16'h0;
+    i_apb_pwdata               = 32'h0;
+    i_apb_pstrb                = 4'b1111;
     i_abc_start0           = 1'b0;
     i_hw_wdata_abc_start2  = 1'b0;
     i_hw_we_abc_start2     = 1'b0;
@@ -256,28 +256,28 @@ module tb_csr;
 
     // Test 9: Address error (misaligned address)
     $display("\n--- Test 9: Address error test ---");
-    @(negedge i_bus_clk);
-    i_psel    = 1'b1;
-    i_penable = 1'b0;
-    i_pwrite  = 1'b1;
-    i_paddr   = 16'h1;  // Misaligned
-    i_pstrb   = 4'b1111;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b1;
+    i_apb_penable = 1'b0;
+    i_apb_pwrite  = 1'b1;
+    i_apb_paddr   = 16'h1;  // Misaligned
+    i_apb_pstrb   = 4'b1111;
     wait_posedge;
-    @(negedge i_bus_clk);
-    i_penable = 1'b1;
+    @(negedge i_clk_apb);
+    i_apb_penable = 1'b1;
     wait_posedge;
-    while (!o_pready) wait_posedge;
-    `ASSERT_EQ(o_pslverr, 1'b1, "pslverr should be 1 for misaligned address");
-    i_psel = 1'b0;
+    while (!o_apb_pready) wait_posedge;
+    `ASSERT_EQ(o_apb_pslverr, 1'b1, "pslverr should be 1 for misaligned address");
+    i_apb_psel = 1'b0;
 
     // Test 10: Protection error
     $display("\n--- Test 10: Protection error test ---");
     i_protect_en = 1'b1;
-    i_pprot      = 3'b010;  // Non-secure access
+    i_apb_pprot      = 3'b010;  // Non-secure access
     apb_write(PARA_ABC_OFFSET, 32'h0);
-    `ASSERT_EQ(o_pslverr, 1'b1, "pslverr should be 1 for protection violation");
+    `ASSERT_EQ(o_apb_pslverr, 1'b1, "pslverr should be 1 for protection violation");
     i_protect_en = 1'b0;
-    i_pprot      = 3'b000;
+    i_apb_pprot      = 3'b000;
 
 
     // Test 11: HWI test - APB write-0 should NOT clear HW-set bit
@@ -314,15 +314,15 @@ module tb_csr;
     `ASSERT_EQ(o_def_start3, 2'b10, "only def_start3[0] is cleared");
 
     // Test 13: CDC data-integrity stress test.
-    // Regression for the o_prdata async resync fix: reg_prdata now latches
-    // in the i_reg_clk domain (qualified by apb_read_en, same domain) and
-    // is resynced into i_bus_clk via reg_prdata_bus, gated by the already
+    // Regression for the o_apb_prdata async resync fix: reg_prdata now latches
+    // in the i_clk_reg domain (qualified by apb_read_en, same domain) and
+    // is resynced into i_clk_apb via reg_prdata_bus, gated by the already
     // bus-clock-synchronized read_aclk_bus_clk_falling pulse. Before the
-    // fix, apb_read_en (an i_reg_clk-domain pulse) directly gated an
-    // i_bus_clk-domain FF, so a fast, back-to-back write/read burst across
-    // the deliberately non-integer-ratio i_bus_clk/i_reg_clk periods
-    // (10ns/15ns) could catch o_prdata holding stale data even while
-    // o_pready correctly reported completion. This loop alternates full
+    // fix, apb_read_en (an i_clk_reg-domain pulse) directly gated an
+    // i_clk_apb-domain FF, so a fast, back-to-back write/read burst across
+    // the deliberately non-integer-ratio i_clk_apb/i_clk_reg periods
+    // (10ns/15ns) could catch o_apb_prdata holding stale data even while
+    // o_apb_pready correctly reported completion. This loop alternates full
     // 0/1 write patterns with no extra settle time between transactions to
     // maximize handshake toggle rate and catch any such miss.
     $display("\n--- Test 13: CDC data-integrity stress (back-to-back reads) ---");

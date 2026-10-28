@@ -12,20 +12,20 @@ module tb_csr;
   localparam integer PARA_CLK_PERIOD = 10;
 
   // Testbench signals
-  reg          i_bus_clk;
-  reg          i_bus_rstn;
-  reg  [15:0]  i_paddr;
+  reg          i_clk_apb;
+  reg          i_rst_n_apb;
+  reg  [15:0]  i_apb_paddr;
   reg          i_protect_en;
   reg          i_slverr_en;
-  reg  [2:0]   i_pprot;
-  reg  [31:0]  i_pwdata;
-  reg          i_pwrite;
-  reg          i_penable;
-  reg          i_psel;
-  reg  [3:0]   i_pstrb;
-  wire         o_pslverr;
-  wire         o_pready;
-  wire [31:0]  o_prdata;
+  reg  [2:0]   i_apb_pprot;
+  reg  [31:0]  i_apb_pwdata;
+  reg          i_apb_pwrite;
+  reg          i_apb_penable;
+  reg          i_apb_psel;
+  reg  [3:0]   i_apb_pstrb;
+  wire         o_apb_pslverr;
+  wire         o_apb_pready;
+  wire [31:0]  o_apb_prdata;
   reg          i_abc_start0;
   wire         o_abc_start1;
   wire         o_abc_start2;
@@ -58,55 +58,55 @@ module tb_csr;
   m_vlsi_csr dut (.*);
 
   // Clock generation
-  initial i_bus_clk = 1'b0;
-  always #(PARA_CLK_PERIOD/2) i_bus_clk = ~i_bus_clk;
+  initial i_clk_apb = 1'b0;
+  always #(PARA_CLK_PERIOD/2) i_clk_apb = ~i_clk_apb;
 
   // Helper tasks
   task wait_posedge;
-    @(posedge i_bus_clk);
+    @(posedge i_clk_apb);
   endtask
 
   task sys_reset;
-    i_bus_rstn = 1'b0;
+    i_rst_n_apb = 1'b0;
     repeat(3) wait_posedge;
-    @(negedge i_bus_clk);
-    i_bus_rstn = 1'b1;
+    @(negedge i_clk_apb);
+    i_rst_n_apb = 1'b1;
   endtask
 
   task apb_write(input [15:0] addr, input [31:0] wdata);
-    @(negedge i_bus_clk);
-    i_psel    = 1'b1;
-    i_penable = 1'b0;
-    i_pwrite  = 1'b1;
-    i_paddr   = addr;
-    i_pwdata  = wdata;
-    i_pstrb   = 4'b1111;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b1;
+    i_apb_penable = 1'b0;
+    i_apb_pwrite  = 1'b1;
+    i_apb_paddr   = addr;
+    i_apb_pwdata  = wdata;
+    i_apb_pstrb   = 4'b1111;
     wait_posedge;
-    @(negedge i_bus_clk);
-    i_penable = 1'b1;
+    @(negedge i_clk_apb);
+    i_apb_penable = 1'b1;
     wait_posedge;
-    while (!o_pready) wait_posedge;
-    @(negedge i_bus_clk);
-    i_psel    = 1'b0;
-    i_penable = 1'b0;
+    while (!o_apb_pready) wait_posedge;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b0;
+    i_apb_penable = 1'b0;
   endtask
 
   task apb_read(input [15:0] addr, output [31:0] rdata);
-    @(negedge i_bus_clk);
-    i_psel    = 1'b1;
-    i_penable = 1'b0;
-    i_pwrite  = 1'b0;
-    i_paddr   = addr;
-    i_pstrb   = 4'b1111;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b1;
+    i_apb_penable = 1'b0;
+    i_apb_pwrite  = 1'b0;
+    i_apb_paddr   = addr;
+    i_apb_pstrb   = 4'b1111;
     wait_posedge;
-    @(negedge i_bus_clk);
-    i_penable = 1'b1;
+    @(negedge i_clk_apb);
+    i_apb_penable = 1'b1;
     wait_posedge;
-    while (!o_pready) wait_posedge;
-    rdata = o_prdata;
-    @(negedge i_bus_clk);
-    i_psel    = 1'b0;
-    i_penable = 1'b0;
+    while (!o_apb_pready) wait_posedge;
+    rdata = o_apb_prdata;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b0;
+    i_apb_penable = 1'b0;
   endtask
 
   // Assertion macros
@@ -140,13 +140,13 @@ module tb_csr;
     // Initialize inputs
     i_protect_en           = 1'b0;
     i_slverr_en            = 1'b1;
-    i_pprot                = 3'b000;
-    i_psel                 = 1'b0;
-    i_penable              = 1'b0;
-    i_pwrite               = 1'b0;
-    i_paddr                = 16'h0;
-    i_pwdata               = 32'h0;
-    i_pstrb                = 4'b1111;
+    i_apb_pprot                = 3'b000;
+    i_apb_psel                 = 1'b0;
+    i_apb_penable              = 1'b0;
+    i_apb_pwrite               = 1'b0;
+    i_apb_paddr                = 16'h0;
+    i_apb_pwdata               = 32'h0;
+    i_apb_pstrb                = 4'b1111;
     i_abc_start0           = 1'b0;
     i_hw_wdata_abc_start2  = 1'b0;
     i_hw_we_abc_start2     = 1'b0;
@@ -224,28 +224,28 @@ module tb_csr;
 
     // Test 9: Address error (misaligned address)
     $display("\n--- Test 9: Address error test ---");
-    @(negedge i_bus_clk);
-    i_psel    = 1'b1;
-    i_penable = 1'b0;
-    i_pwrite  = 1'b1;
-    i_paddr   = 16'h1;  // Misaligned
-    i_pstrb   = 4'b1111;
+    @(negedge i_clk_apb);
+    i_apb_psel    = 1'b1;
+    i_apb_penable = 1'b0;
+    i_apb_pwrite  = 1'b1;
+    i_apb_paddr   = 16'h1;  // Misaligned
+    i_apb_pstrb   = 4'b1111;
     wait_posedge;
-    @(negedge i_bus_clk);
-    i_penable = 1'b1;
+    @(negedge i_clk_apb);
+    i_apb_penable = 1'b1;
     wait_posedge;
-    while (!o_pready) wait_posedge;
-    `ASSERT_EQ(o_pslverr, 1'b1, "pslverr should be 1 for misaligned address");
-    i_psel = 1'b0;
+    while (!o_apb_pready) wait_posedge;
+    `ASSERT_EQ(o_apb_pslverr, 1'b1, "pslverr should be 1 for misaligned address");
+    i_apb_psel = 1'b0;
 
     // Test 10: Protection error
     $display("\n--- Test 10: Protection error test ---");
     i_protect_en = 1'b1;
-    i_pprot      = 3'b010;  // Non-secure access
+    i_apb_pprot      = 3'b010;  // Non-secure access
     apb_write(PARA_ABC_OFFSET, 32'h0);
-    `ASSERT_EQ(o_pslverr, 1'b1, "pslverr should be 1 for protection violation");
+    `ASSERT_EQ(o_apb_pslverr, 1'b1, "pslverr should be 1 for protection violation");
     i_protect_en = 1'b0;
-    i_pprot      = 3'b000;
+    i_apb_pprot      = 3'b000;
 
 
     // Test 11: HWI test - APB write-0 should NOT clear HW-set bit

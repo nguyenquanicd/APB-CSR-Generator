@@ -35,7 +35,7 @@ all: simv
 
 simv: sync_tb $(RTL_FILELIST) $(TB_LIB_SRCS)
 	@mkdir -p $(SIM_DIR)
-	CSR_GEN_HOME=$(CSR_GEN_HOME) $(VERILATOR) $(VL_FLAGS) -f $(RTL_FILELIST) $(TB_BUILD_SRCS) -o $(SIM_DIR)/simv
+	cd $(RTL_DIR) && CSR_GEN_HOME=$(CSR_GEN_HOME) $(VERILATOR) $(VL_FLAGS) -f $(RTL_FILELIST) $(TB_BUILD_SRCS) -o $(SIM_DIR)/simv
 
 sync_tb:
 	@mkdir -p $(SIM_DIR)
