@@ -1,0 +1,74 @@
+{
+ "signal": [
+  {
+   "name": "i_clk_apb",
+   "wave": "p....."
+  },
+  {
+   "name": "i_rst_n_apb",
+   "wave": "111111"
+  },
+  [
+   "APB",
+   {
+    "name": "i_apb_psel",
+    "wave": "011000"
+   },
+   {
+    "name": "i_apb_penable",
+    "wave": "001000"
+   },
+   {
+    "name": "i_apb_pwrite",
+    "wave": "011000"
+   },
+   {
+    "name": "i_apb_paddr",
+    "wave": "x=.xxx",
+    "data": [
+     "0x0000"
+    ]
+   },
+   {
+    "name": "i_apb_pwdata",
+    "wave": "x=.xxx",
+    "data": [
+     "0xFFFFFFFF"
+    ]
+   },
+   {
+    "name": "i_apb_pstrb",
+    "wave": "x=.xxx",
+    "data": [
+     "0x3"
+    ]
+   },
+   {
+    "name": "o_apb_pready",
+    "wave": "001000"
+   },
+   {
+    "name": "o_apb_pslverr",
+    "wave": "001111"
+   },
+   {
+    "name": "o_apb_prdata",
+    "wave": "xxxxxx"
+   }
+  ],
+  [
+   "Control and status",
+   {
+    "name": "i_slverr_en",
+    "wave": "111111"
+   },
+   {
+    "name": "o_abc_start1",
+    "wave": "000000"
+   }
+  ]
+ ],
+ "head": {
+  "text": "WF-004 Write with partial strobe: PSLVERR, no register change"
+ }
+}

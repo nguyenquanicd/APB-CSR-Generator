@@ -1,0 +1,78 @@
+{
+ "signal": [
+  {
+   "name": "i_clk_apb",
+   "wave": "p........."
+  },
+  {
+   "name": "i_rst_n_apb",
+   "wave": "1111111111"
+  },
+  [
+   "APB",
+   {
+    "name": "i_apb_psel",
+    "wave": "0111011100"
+   },
+   {
+    "name": "i_apb_penable",
+    "wave": "0011001100"
+   },
+   {
+    "name": "i_apb_pwrite",
+    "wave": "0000011100"
+   },
+   {
+    "name": "i_apb_paddr",
+    "wave": "x=..x=..xx",
+    "data": [
+     "0x0008",
+     "0x0008"
+    ]
+   },
+   {
+    "name": "i_apb_pwdata",
+    "wave": "xxxxx=..xx",
+    "data": [
+     "0xFFFFFFFF"
+    ]
+   },
+   {
+    "name": "i_apb_pstrb",
+    "wave": "xxxxx=..xx",
+    "data": [
+     "0xF"
+    ]
+   },
+   {
+    "name": "o_apb_pready",
+    "wave": "0001000100"
+   },
+   {
+    "name": "o_apb_pslverr",
+    "wave": "0000000000"
+   },
+   {
+    "name": "o_apb_prdata",
+    "wave": "xxx=xxxxxx",
+    "data": [
+     "0x00000000"
+    ]
+   }
+  ],
+  [
+   "Control and status",
+   {
+    "name": "o_abc_start1",
+    "wave": "0000000000"
+   },
+   {
+    "name": "o_def_start0",
+    "wave": "0000000000"
+   }
+  ]
+ ],
+ "head": {
+  "text": "WF-005 Aligned address that is not a register: read 0, write ignored, OKAY"
+ }
+}

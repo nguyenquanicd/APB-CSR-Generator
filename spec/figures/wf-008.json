@@ -1,0 +1,81 @@
+{
+ "signal": [
+  {
+   "name": "i_clk_apb",
+   "wave": "p............."
+  },
+  {
+   "name": "i_rst_n_apb",
+   "wave": "11111111111111"
+  },
+  [
+   "APB",
+   {
+    "name": "i_apb_psel",
+    "wave": "00001110111000"
+   },
+   {
+    "name": "i_apb_penable",
+    "wave": "00000110011000"
+   },
+   {
+    "name": "i_apb_pwrite",
+    "wave": "00001110111000"
+   },
+   {
+    "name": "i_apb_paddr",
+    "wave": "xxxx=..x=..xxx",
+    "data": [
+     "0x0004",
+     "0x0004"
+    ]
+   },
+   {
+    "name": "i_apb_pwdata",
+    "wave": "xxxx=..x=..xxx",
+    "data": [
+     "0x20000000",
+     "0x20000000"
+    ]
+   },
+   {
+    "name": "i_apb_pstrb",
+    "wave": "xxxx=..x=..xxx",
+    "data": [
+     "0xF",
+     "0xF"
+    ]
+   },
+   {
+    "name": "o_apb_pready",
+    "wave": "00000010001000"
+   },
+   {
+    "name": "o_apb_pslverr",
+    "wave": "00000000000000"
+   },
+   {
+    "name": "o_apb_prdata",
+    "wave": "xxxxxxxxxxxxxx"
+   }
+  ],
+  [
+   "Control and status",
+   {
+    "name": "i_hw_we_def_start2",
+    "wave": "01000100000000"
+   },
+   {
+    "name": "i_hw_wdata_def_start2",
+    "wave": "01000100000000"
+   },
+   {
+    "name": "o_def_start2",
+    "wave": "00111111110000"
+   }
+  ]
+ ],
+ "head": {
+  "text": "WF-008 w1c field: a hardware load wins over a software clear in the same cycle"
+ }
+}

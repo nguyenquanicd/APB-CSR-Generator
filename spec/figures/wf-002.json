@@ -1,0 +1,90 @@
+{
+ "signal": [
+  {
+   "name": "i_clk_apb",
+   "wave": "p......"
+  },
+  {
+   "name": "i_rst_n_apb",
+   "wave": "1111111"
+  },
+  [
+   "APB",
+   {
+    "name": "i_apb_psel",
+    "wave": "0011100"
+   },
+   {
+    "name": "i_apb_penable",
+    "wave": "0001100"
+   },
+   {
+    "name": "i_apb_pwrite",
+    "wave": "0011100"
+   },
+   {
+    "name": "i_apb_paddr",
+    "wave": "xx=..xx",
+    "data": [
+     "0x0000"
+    ]
+   },
+   {
+    "name": "i_apb_pwdata",
+    "wave": "xx=..xx",
+    "data": [
+     "0xFFFFFFFF"
+    ]
+   },
+   {
+    "name": "i_apb_pstrb",
+    "wave": "xx=..xx",
+    "data": [
+     "0xF"
+    ]
+   },
+   {
+    "name": "o_apb_pready",
+    "wave": "0000100"
+   },
+   {
+    "name": "o_apb_pslverr",
+    "wave": "0000000"
+   },
+   {
+    "name": "o_apb_prdata",
+    "wave": "xxxxxxx"
+   }
+  ],
+  [
+   "Control and status",
+   {
+    "name": "o_abc_start1",
+    "wave": "0000111"
+   },
+   {
+    "name": "o_abc_start2",
+    "wave": "0000111"
+   },
+   {
+    "name": "o_abc_start3",
+    "wave": "=...=..",
+    "data": [
+     "0x0",
+     "0x3"
+    ]
+   },
+   {
+    "name": "o_abc_start4",
+    "wave": "=...=..",
+    "data": [
+     "0x0",
+     "0x3"
+    ]
+   }
+  ]
+ ],
+ "head": {
+  "text": "WF-002 Write transfer, one clock, one wait state"
+ }
+}

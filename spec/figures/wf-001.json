@@ -1,0 +1,99 @@
+{
+ "signal": [
+  {
+   "name": "i_clk_apb",
+   "wave": "p..............."
+  },
+  {
+   "name": "i_rst_n_apb",
+   "wave": "0011111111000111"
+  },
+  [
+   "APB",
+   {
+    "name": "i_apb_psel",
+    "wave": "0000111001100000"
+   },
+   {
+    "name": "i_apb_penable",
+    "wave": "0000011000100000"
+   },
+   {
+    "name": "i_apb_pwrite",
+    "wave": "0000111001100000"
+   },
+   {
+    "name": "i_apb_paddr",
+    "wave": "xxxx=..xx=.xxxxx",
+    "data": [
+     "0x0000",
+     "0x0000"
+    ]
+   },
+   {
+    "name": "i_apb_pwdata",
+    "wave": "xxxx=..xx=.xxxxx",
+    "data": [
+     "0xFFFFFFFF",
+     "0x00000000"
+    ]
+   },
+   {
+    "name": "i_apb_pstrb",
+    "wave": "xxxx=..xx=.xxxxx",
+    "data": [
+     "0xF",
+     "0xF"
+    ]
+   },
+   {
+    "name": "o_apb_pready",
+    "wave": "0000001000000000"
+   },
+   {
+    "name": "o_apb_pslverr",
+    "wave": "0000000000000000"
+   },
+   {
+    "name": "o_apb_prdata",
+    "wave": "xxxxxxxxxxxxxxxx"
+   }
+  ],
+  [
+   "Control and status",
+   {
+    "name": "o_abc_start1",
+    "wave": "0000001111000000"
+   },
+   {
+    "name": "o_abc_start2",
+    "wave": "0000001111000000"
+   },
+   {
+    "name": "o_abc_start3",
+    "wave": "=.....=...=.....",
+    "data": [
+     "0x0",
+     "0x3",
+     "0x0"
+    ]
+   },
+   {
+    "name": "o_abc_start4",
+    "wave": "=.....=...=.....",
+    "data": [
+     "0x0",
+     "0x3",
+     "0x0"
+    ]
+   },
+   {
+    "name": "o_def_start0",
+    "wave": "0000000000000000"
+   }
+  ]
+ ],
+ "head": {
+  "text": "WF-001 Asynchronous reset in the middle of a transfer, then release"
+ }
+}

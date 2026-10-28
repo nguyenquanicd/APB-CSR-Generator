@@ -1,0 +1,78 @@
+{
+ "signal": [
+  {
+   "name": "i_clk_apb",
+   "wave": "p........."
+  },
+  {
+   "name": "i_rst_n_apb",
+   "wave": "1111111111"
+  },
+  [
+   "APB",
+   {
+    "name": "i_apb_psel",
+    "wave": "0000111000"
+   },
+   {
+    "name": "i_apb_penable",
+    "wave": "0000011000"
+   },
+   {
+    "name": "i_apb_pwrite",
+    "wave": "0000111000"
+   },
+   {
+    "name": "i_apb_paddr",
+    "wave": "xxxx=..xxx",
+    "data": [
+     "0x0000"
+    ]
+   },
+   {
+    "name": "i_apb_pwdata",
+    "wave": "xxxx=..xxx",
+    "data": [
+     "0x00000000"
+    ]
+   },
+   {
+    "name": "i_apb_pstrb",
+    "wave": "xxxx=..xxx",
+    "data": [
+     "0xF"
+    ]
+   },
+   {
+    "name": "o_apb_pready",
+    "wave": "0000001000"
+   },
+   {
+    "name": "o_apb_pslverr",
+    "wave": "0000000000"
+   },
+   {
+    "name": "o_apb_prdata",
+    "wave": "xxxxxxxxxx"
+   }
+  ],
+  [
+   "Control and status",
+   {
+    "name": "i_hw_we_abc_start2",
+    "wave": "0100010000"
+   },
+   {
+    "name": "i_hw_wdata_abc_start2",
+    "wave": "0100010000"
+   },
+   {
+    "name": "o_abc_start2",
+    "wave": "0011110000"
+   }
+  ]
+ ],
+ "head": {
+  "text": "WF-009 rwi field: a software write wins over a hardware load in the same cycle"
+ }
+}

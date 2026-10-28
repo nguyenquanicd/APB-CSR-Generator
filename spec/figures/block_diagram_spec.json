@@ -1,0 +1,385 @@
+{
+ "page_name": "BLOCK_DIAGRAM",
+ "out_name": "block_diagram.drawio",
+ "table_suffix": "",
+ "layout": {
+  "gap_h": 100,
+  "gap_v": 120,
+  "margin": 40,
+  "block_h": 60
+ },
+ "top": {
+  "frame_label": [
+   "TOP",
+   "(m_vlsi_async_csr)"
+  ],
+  "block_label": [
+   "TOP",
+   "(m_vlsi_async_csr)"
+  ],
+  "block_row": [
+   "TOP (m_vlsi_async_csr)",
+   "Generated CSR module, two-clock configuration.",
+   "Section 14.2"
+  ]
+ },
+ "frame_row": [
+  "TOP (m_vlsi_async_csr) frame",
+  "Generated register module with an APB4 Completer, a request and acknowledge bridge between the bus clock and the register clock, and the register bank. The APB interface is on the left and top, the field ports are on the right and bottom.",
+  "Section 14.2"
+ ],
+ "frame_interfaces": [
+  "APBI",
+  "APBO",
+  "CFG",
+  "FLDI",
+  "HWL",
+  "FLDO",
+  "CKA",
+  "CKR"
+ ],
+ "blocks": [
+  {
+   "key": "dec",
+   "label": [
+    "apb_decode",
+    "(m_vlsi_async_csr)"
+   ],
+   "width": 240,
+   "row": 0,
+   "col": 0,
+   "row_name": "apb_decode (m_vlsi_async_csr)",
+   "function": "Detects the SETUP phase, evaluates the protection, alignment and strobe error conditions, and captures the address and the write data.",
+   "source": "Section 14.2"
+  },
+  {
+   "key": "abr",
+   "label": [
+    "apb_response",
+    "(m_vlsi_async_csr)"
+   ],
+   "width": 240,
+   "row": 0,
+   "col": 1,
+   "row_name": "apb_response (m_vlsi_async_csr)",
+   "function": "Holds the transfer request and acknowledge state on the bus clock and drives the ready, error, and read data outputs.",
+   "source": "Section 14.2"
+  },
+  {
+   "key": "syn",
+   "label": [
+    "u_*_sync (x4)",
+    "(m_csr_sync)"
+   ],
+   "width": 180,
+   "row": 0,
+   "col": 2,
+   "row_name": "u_*_sync (x4) (m_csr_sync)",
+   "function": "Four two-flop synchronizers, one per single-bit crossing between the bus clock and the register clock.",
+   "source": "Section 14.2"
+  },
+  {
+   "key": "rbr",
+   "label": [
+    "reg_handshake",
+    "(m_vlsi_async_csr)"
+   ],
+   "width": 240,
+   "row": 1,
+   "col": 2,
+   "row_name": "reg_handshake (m_vlsi_async_csr)",
+   "function": "Turns the synchronized requests into one-cycle enables on the register clock and returns the acknowledge.",
+   "source": "Section 14.2"
+  },
+  {
+   "key": "rdm",
+   "label": [
+    "read_mux",
+    "(m_vlsi_async_csr)"
+   ],
+   "width": 240,
+   "row": 1,
+   "col": 1,
+   "row_name": "read_mux (m_vlsi_async_csr)",
+   "function": "Selects the register at the captured address and keeps the read data on the register clock.",
+   "source": "Section 14.2"
+  },
+  {
+   "key": "bank",
+   "label": [
+    "register_bank",
+    "(m_vlsi_async_csr)"
+   ],
+   "width": 240,
+   "row": 1,
+   "col": 0,
+   "row_name": "register_bank (m_vlsi_async_csr)",
+   "function": "Holds the field flip-flops and evaluates the next value of each field from the write, the hardware load, and the type.",
+   "source": "Section 14.2"
+  }
+ ],
+ "connectors": [
+  {
+   "id": "TRN",
+   "src": "dec",
+   "src_side": "R",
+   "dst": "abr",
+   "dst_side": "L"
+  },
+  {
+   "id": "REQ",
+   "src": "abr",
+   "src_side": "R",
+   "dst": "syn",
+   "dst_side": "L"
+  },
+  {
+   "id": "RQS",
+   "src": "syn",
+   "src_side": "B",
+   "dst": "rbr",
+   "dst_side": "T"
+  },
+  {
+   "id": "REN",
+   "src": "rbr",
+   "src_side": "L",
+   "dst": "rdm",
+   "dst_side": "R"
+  },
+  {
+   "id": "WEN",
+   "src": "rbr",
+   "src_side": "B",
+   "dst": "bank",
+   "dst_side": "B"
+  },
+  {
+   "id": "VAL",
+   "src": "bank",
+   "src_side": "R",
+   "dst": "rdm",
+   "dst_side": "L"
+  },
+  {
+   "id": "RDD",
+   "src": "rdm",
+   "src_side": "T",
+   "dst": "abr",
+   "dst_side": "B"
+  },
+  {
+   "id": "CAP",
+   "src": "dec",
+   "src_side": "B",
+   "dst": "bank",
+   "dst_side": "T"
+  }
+ ],
+ "externals": [
+  {
+   "id": "APBI",
+   "block": "dec",
+   "side": "L",
+   "dir": "in",
+   "pos": 0,
+   "text": [
+    "APBI",
+    "i_apb_p*"
+   ]
+  },
+  {
+   "id": "APBO",
+   "block": "abr",
+   "side": "T",
+   "dir": "out",
+   "pos": 0,
+   "text": [
+    "APBO",
+    "o_apb_p*"
+   ]
+  },
+  {
+   "id": "CFG",
+   "block": "dec",
+   "side": "T",
+   "dir": "in",
+   "pos": 0,
+   "text": [
+    "CFG",
+    "i_protect_en, i_slverr_en"
+   ]
+  },
+  {
+   "id": "FLDI",
+   "block": "rdm",
+   "side": "B",
+   "dir": "in",
+   "pos": 0,
+   "text": [
+    "FLDI",
+    "i_abc_start0"
+   ]
+  },
+  {
+   "id": "HWL",
+   "block": "bank",
+   "side": "B",
+   "dir": "in",
+   "pos": -40,
+   "text": [
+    "HWL",
+    "i_hw_*"
+   ]
+  },
+  {
+   "id": "FLDO",
+   "block": "bank",
+   "side": "L",
+   "dir": "out",
+   "pos": 0,
+   "text": [
+    "FLDO",
+    "o_abc_*, o_def_*"
+   ]
+  },
+  {
+   "id": "CKA",
+   "block": "dec",
+   "side": "L",
+   "dir": "in",
+   "pos": -40,
+   "text": [
+    "CKA",
+    "i_clk_apb, i_rst_n_apb"
+   ]
+  },
+  {
+   "id": "CKR",
+   "block": "rbr",
+   "side": "R",
+   "dir": "in",
+   "pos": 0,
+   "text": [
+    "CKR",
+    "i_clk_reg, i_rst_n_reg"
+   ]
+  }
+ ],
+ "nets": [],
+ "interfaces": [
+  {
+   "id": "TRN",
+   "name": "Transfer decode",
+   "category": "custom",
+   "active": "TOP -> TOP",
+   "signals": "w_apb_setup, w_apb_slverr, w_apb_rd, w_apb_wr"
+  },
+  {
+   "id": "REQ",
+   "name": "Request toggles and acknowledge",
+   "category": "custom",
+   "active": "TOP -> TOP",
+   "signals": "reg_rd_req, reg_wr_req, w_rd_ack_bus, w_wr_ack_bus"
+  },
+  {
+   "id": "RQS",
+   "name": "Synchronized requests",
+   "category": "custom",
+   "active": "TOP -> TOP",
+   "signals": "w_rd_req_reg, w_wr_req_reg, w_rd_ack, w_wr_ack"
+  },
+  {
+   "id": "WEN",
+   "name": "Write enable",
+   "category": "custom",
+   "active": "TOP -> TOP",
+   "signals": "w_wr_en"
+  },
+  {
+   "id": "REN",
+   "name": "Read enable",
+   "category": "custom",
+   "active": "TOP -> TOP",
+   "signals": "w_rd_en"
+  },
+  {
+   "id": "VAL",
+   "name": "Register values",
+   "category": "custom",
+   "active": "TOP -> TOP",
+   "signals": "w_abc_value, w_def_value"
+  },
+  {
+   "id": "RDD",
+   "name": "Read data of the register clock",
+   "category": "custom",
+   "active": "TOP -> TOP",
+   "signals": "reg_rdata"
+  },
+  {
+   "id": "CAP",
+   "name": "Captured address and write data",
+   "category": "custom",
+   "active": "TOP -> TOP",
+   "signals": "reg_addr, reg_wdata"
+  },
+  {
+   "id": "APBI",
+   "name": "APB request",
+   "category": "handshake",
+   "active": "external -> TOP",
+   "signals": "external -> TOP: i_apb_psel, i_apb_penable, i_apb_pwrite, i_apb_paddr, i_apb_pwdata, i_apb_pstrb, i_apb_pprot"
+  },
+  {
+   "id": "APBO",
+   "name": "APB response",
+   "category": "handshake",
+   "active": "TOP -> external",
+   "signals": "TOP -> external: o_apb_pready, o_apb_pslverr, o_apb_prdata"
+  },
+  {
+   "id": "CFG",
+   "name": "Access check control",
+   "category": "custom",
+   "active": "external -> TOP",
+   "signals": "external -> TOP: i_protect_en, i_slverr_en"
+  },
+  {
+   "id": "FLDI",
+   "name": "Field status inputs",
+   "category": "custom",
+   "active": "external -> TOP",
+   "signals": "external -> TOP: i_abc_start0"
+  },
+  {
+   "id": "HWL",
+   "name": "Hardware loads",
+   "category": "custom",
+   "active": "external -> TOP",
+   "signals": "external -> TOP: i_hw_wdata_abc_start2, i_hw_we_abc_start2, i_hw_wdata_abc_start4, i_hw_we_abc_start4, i_hw_wdata_def_start1, i_hw_we_def_start1, i_hw_wdata_def_start2, i_hw_we_def_start2, i_hw_wdata_def_start3, i_hw_we_def_start3, i_hw_wdata_def_start4, i_hw_we_def_start4"
+  },
+  {
+   "id": "FLDO",
+   "name": "Field outputs",
+   "category": "custom",
+   "active": "TOP -> external",
+   "signals": "TOP -> external: o_abc_start1, o_abc_start2, o_abc_start3, o_abc_start4, o_def_start0, o_def_start1, o_def_start2, o_def_start3, o_def_start4"
+  },
+  {
+   "id": "CKA",
+   "name": "APB clock and reset",
+   "category": "custom",
+   "active": "SoC -> TOP",
+   "signals": "i_clk_apb, i_rst_n_apb"
+  },
+  {
+   "id": "CKR",
+   "name": "Register clock and reset",
+   "category": "custom",
+   "active": "SoC -> TOP",
+   "signals": "i_clk_reg, i_rst_n_reg"
+  }
+ ],
+ "legend_note": "The enclosing frame is the generated module; the blocks inside are groups of its processes, except the synchronizer block that stands for four instances of the synchronizer module. Both clocks and resets reach every block of their domain."
+}
