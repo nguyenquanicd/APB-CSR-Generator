@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 //--------------------------------------------------------------------
 // Project: APB-CSR-Generator
-// Generator: ltthinh
-// Date and time: 2026-09-27 13:36:09.467683
+// Generator: bytecody
+// Date and time: 2026-10-28 23:23:31.091454
 // Module: m_vlsi_csr
 // Function: Control & Status register via APB interface
 // Page: VLSI Technology
@@ -270,8 +270,8 @@ module m_vlsi_csr # (
   end 
   assign o_abc_start1 = reg_abc_start1;
   //Assignment for next value of abc_start2 rwi
-  assign nxt_abc_start2 = (we_abc) ? reg_pwdata[29]
-                        : (i_hw_we_abc_start2) ? i_hw_wdata_abc_start2
+  assign nxt_abc_start2 = (i_hw_we_abc_start2) ? i_hw_wdata_abc_start2
+                        : (we_abc) ? reg_pwdata[29]
                         : reg_abc_start2;
   //FF for bit abc_start2
   always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
@@ -292,8 +292,8 @@ module m_vlsi_csr # (
   end 
   assign o_abc_start3 = reg_abc_start3;
   //Assignment for next value of abc_start4 rwi
-  assign nxt_abc_start4 = (we_abc) ? reg_pwdata[26:25]
-                        : (i_hw_we_abc_start4) ? i_hw_wdata_abc_start4
+  assign nxt_abc_start4 = (i_hw_we_abc_start4) ? i_hw_wdata_abc_start4
+                        : (we_abc) ? reg_pwdata[26:25]
                         : reg_abc_start4;
   //FF for bit abc_start4
   always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
@@ -325,8 +325,8 @@ module m_vlsi_csr # (
   end 
   assign o_def_start0 = reg_def_start0;
   //Assignment for next value of def_start1 rwi
-  assign nxt_def_start1 = (we_def) ? reg_pwdata[30]
-                        : (i_hw_we_def_start1) ? i_hw_wdata_def_start1
+  assign nxt_def_start1 = (i_hw_we_def_start1) ? i_hw_wdata_def_start1
+                        : (we_def) ? reg_pwdata[30]
                         : reg_def_start1;
   //FF for bit def_start1
   always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
@@ -337,8 +337,8 @@ module m_vlsi_csr # (
   end 
   assign o_def_start1 = reg_def_start1;
   //Assignment for next value of def_start2 w1c
-  assign nxt_def_start2 = (we_def) ? (~reg_pwdata[29] & reg_def_start2)
-                        : (i_hw_we_def_start2) ? i_hw_wdata_def_start2
+  assign nxt_def_start2 = (i_hw_we_def_start2) ? i_hw_wdata_def_start2
+                        : (we_def) ? (~reg_pwdata[29] & reg_def_start2)
                         : reg_def_start2;
   //FF for bit def_start2
   always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
@@ -349,8 +349,8 @@ module m_vlsi_csr # (
   end 
   assign o_def_start2 = reg_def_start2;
   //Assignment for next value of def_start3 w1c
-  assign nxt_def_start3 = (we_def) ? (~reg_pwdata[28:27] & reg_def_start3)
-                        : (i_hw_we_def_start3) ? i_hw_wdata_def_start3
+  assign nxt_def_start3 = (i_hw_we_def_start3) ? i_hw_wdata_def_start3
+                        : (we_def) ? (~reg_pwdata[28:27] & reg_def_start3)
                         : reg_def_start3;
   //FF for bit def_start3
   always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit
@@ -361,8 +361,8 @@ module m_vlsi_csr # (
   end 
   assign o_def_start3 = reg_def_start3;
   //Assignment for next value of def_start4 rwi
-  assign nxt_def_start4 = (we_def) ? reg_pwdata[26:25]
-                        : (i_hw_we_def_start4) ? i_hw_wdata_def_start4
+  assign nxt_def_start4 = (i_hw_we_def_start4) ? i_hw_wdata_def_start4
+                        : (we_def) ? reg_pwdata[26:25]
                         : reg_def_start4;
   //FF for bit def_start4
   always_ff @ (posedge i_reg_clk, negedge i_reg_rstn) begin //FF for each bit

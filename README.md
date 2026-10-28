@@ -63,8 +63,8 @@ configuration for review — see [Generation Workflow](#generation-workflow).
 |------------|------------------|
 | `ro` | `i_<reg>_<bit>` (input) — the register value is a direct passthrough of this port, no flop |
 | `rw` | `o_<reg>_<bit>` (output) — SW-writable, reads back the last SW write |
-| `rwi` | `o_<reg>_<bit>` (output), `i_hw_wdata_<reg>_<bit>` (input), `i_hw_we_<reg>_<bit>` (input, 1 bit) — SW write takes priority over a same-cycle HW write |
-| `w1c` | `o_<reg>_<bit>` (output), `i_hw_wdata_<reg>_<bit>` (input), `i_hw_we_<reg>_<bit>` (input, 1 bit) — a SW write of `1` clears the bit; HW can independently set it via `i_hw_we_*`/`i_hw_wdata_*` |
+| `rwi` | `o_<reg>_<bit>` (output), `i_hw_wdata_<reg>_<bit>` (input), `i_hw_we_<reg>_<bit>` (input, 1 bit) — HW write takes priority over a same-cycle SW write |
+| `w1c` | `o_<reg>_<bit>` (output), `i_hw_wdata_<reg>_<bit>` (input), `i_hw_we_<reg>_<bit>` (input, 1 bit) — a SW write of `1` clears the bit; HW can independently set it via `i_hw_we_*`/`i_hw_wdata_*`, and a same-cycle HW event wins over the SW clear |
 
 A field named `reserved` gets no ports at all — it reads back as `0` and ignores writes.
 
@@ -153,19 +153,31 @@ sequenceDiagram
 |------|---------|----------|----------|----------------------|
 | `ro` | Yes (passthrough) | Ignored | `i_<reg>_<bit>` | N/A — no register, wired straight through |
 | `rw` | Yes | Yes | — | SW write wins, else holds |
-| `rwi` | Yes | Yes | `i_hw_we_*` / `i_hw_wdata_*` | **SW write > HW write > hold** |
-| `w1c` | Yes | Writing `1` clears the bit, `0` is a no-op | `i_hw_we_*` / `i_hw_wdata_*` (typically HW *sets* the bit) | **SW write (clear) > HW write (set) > hold** |
+| `rwi` | Yes | Yes | `i_hw_we_*` / `i_hw_wdata_*` | **HW write > SW write > hold** |
+| `w1c` | Yes | Writing `1` clears the bit, `0` is a no-op | `i_hw_we_*` / `i_hw_wdata_*` (typically HW *sets* the bit) | **HW write (set) > SW write (clear) > hold** |
 
 ```mermaid
 flowchart TD
-    WE{"we_reg\n(address match AND\nwrite-enable)?"}
+    HWCHK{"i_hw_we_reg_bit?\n(rwi / w1c only)"}
+    HWCHK -->|"yes"| HWVAL["nxt = i_hw_wdata_reg_bit"]
+    HWCHK -->|"no"| WE{"we_reg\n(address match AND\nwrite-enable)?"}
     WE -->|"yes, type=rw"| SWVAL["nxt = pwdata field"]
     WE -->|"yes, type=rwi"| SWVAL
     WE -->|"yes, type=w1c"| CLR["nxt = reg AND NOT(pwdata field)\n(1 clears, 0 holds)"]
-    WE -->|"no"| HWCHK{"i_hw_we_reg_bit?\n(rwi / w1c only)"}
-    HWCHK -->|"yes"| HWVAL["nxt = i_hw_wdata_reg_bit"]
-    HWCHK -->|"no"| HOLD["nxt = reg (unchanged)"]
+    WE -->|"no"| HOLD["nxt = reg (unchanged)"]
 ```
+
+The priority is decided **per field**, not per register. `we_reg` is shared by every field of a register,
+but a HW event on one field only overrides that field: a SW write to the register still lands on all its
+other fields, and a SW write never discards a HW event on a field it does not clear. Consequences:
+
+- `w1c`: an event arriving in the same cycle as a SW clear of the same bit is kept (the bit stays `1`), so
+  SW sees it on the next read. This also holds when SW writes any other field of the same register.
+- `rwi`: a SW write to a field is overridden by a same-cycle HW write to that same field. Used as a
+  request/acknowledge handshake (SW sets, HW clears), SW should only write when no request is pending;
+  a write that lands on the same edge as the acknowledge is dropped.
+- A field wider than one bit is replaced as a whole by `i_hw_wdata_*` when `i_hw_we_*` is set; HW cannot
+  update only some bits of a multi-bit `rwi`/`w1c` field.
 
 ### 3. Clock-Domain Crossing (`Asynchronous=1` only)
 
@@ -295,6 +307,7 @@ re-generation — see `CSR_Generation.py`'s `shutil.copyfile` vs `copytree` bran
 | **One protocol implemented** | `apb_protocol` is the only backend `sfr` currently dispatches to; the `protocol` workbook field is otherwise unused |
 | **Synchronizer is a placeholder** | `models/m_vlsi_synch.sv` is explicitly a generic 2-flop behavioral model ("please comment out ... and replace with your model") — using it unmodified in a real CDC path is a functional risk, not just a lint concern |
 | **`gen_tb()` is unused** | The `sfr.gen_tb()` testbench-stub method exists in the tool but the CLI entry point at the bottom of `CSR_Generation.py` never calls it |
+| **Same-cycle SW write is dropped on a HW-written field** | By design HW wins (see Design Description, Field Types). A SW write to a `rwi` field, or a SW clear of a `w1c` bit, that lands on the same edge as a HW write to that field is lost without any bus-level indication (`PSLVERR` is not raised); software must avoid racing the hardware on the same field |
 | **No overlap/range checking** | The generator does not validate that register offsets are unique or that bit fields within a register don't overlap — a malformed workbook can silently produce broken RTL |
 
 ---
@@ -334,6 +347,7 @@ bakes them into the emitted module rather than leaving them runtime-configurable
 | 1.0 | 2026-03-06 | Initial version |
 | 1.1 | 2026-09-20 | Fixed CDC bug in async template (Asynchronous=1): `o_prdata` was captured by an `always_ff @ (posedge i_bus_clk)` gated by `apb_read_en`, a signal generated entirely in the `i_reg_clk` domain, risking a missed/metastable read-data update across asynchronous clocks. `reg_prdata` now latches in the `i_reg_clk` domain (qualified by `apb_read_en`, same domain), and a new `reg_prdata_bus` FF resyncs it into the `i_bus_clk` domain using the already-synchronized `read_aclk_bus_clk_falling` pulse before driving `o_prdata`. Sync template (Asynchronous=0) unaffected. |
 | 1.2 | 2026-09-27 | Documentation overhaul: added Interface Signals, Architecture (generation-pipeline flowchart + link to the interactive `docs/architecture.html` block diagram), Design Description (APB handshake sequence, field-type decision flowchart, CDC handshake writeup), a Register Map for the `CSR_Example.xlsx` worked example (`abc`/`def`, bit-layout diagrams + tables covering all four field types), Generation Workflow (workbook format, CLI usage, output layout), Constraints and Limitations, Configuration Parameters, and Compliance. No RTL or generator changes. |
+| 1.3 | 2026-10-28 | Field priority changed so **HW wins over SW** on `rwi` and `w1c` fields (previously SW won). Fixes a HW event on a `w1c` field being lost when SW wrote any other field of the same register (the register-wide `we_reg` overrode the field's `i_hw_we_*`). Example RTL `RTL/m_vlsi_csr.sv` and `RTL/m_vlsi_async_csr.sv` regenerated. New testbench `sim/tests/csr_priority_test/` (see its `run.sh`) covers sync and async. The `Register_Description` sheet of the workbooks still says "Software write is higher priority" for `rwi` and must be updated. |
 
 ---
 

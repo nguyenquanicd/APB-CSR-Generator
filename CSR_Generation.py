@@ -138,13 +138,13 @@ class bit:
   assign nxt_{self.reg_group}_{self.name} = (we_{self.reg_group}) ? reg_pwdata{self.field} : reg_{self.reg_group}_{self.name};\n'''
         elif self.type == 'rwi':
             self.rtl += f'''  //Assignment for next value of {self.reg_group}_{self.name} rwi
-  assign nxt_{self.reg_group}_{self.name} = (we_{self.reg_group}) ? reg_pwdata{self.field}
-{" " * space_num}: (i_hw_we_{self.reg_group}_{self.name}) ? i_hw_wdata_{self.reg_group}_{self.name}
+  assign nxt_{self.reg_group}_{self.name} = (i_hw_we_{self.reg_group}_{self.name}) ? i_hw_wdata_{self.reg_group}_{self.name}
+{" " * space_num}: (we_{self.reg_group}) ? reg_pwdata{self.field}
 {" " * space_num}: reg_{self.reg_group}_{self.name};\n'''
         elif self.type == 'w1c':
             self.rtl += f'''  //Assignment for next value of {self.reg_group}_{self.name} w1c
-  assign nxt_{self.reg_group}_{self.name} = (we_{self.reg_group}) ? (~reg_pwdata{self.field} & reg_{self.reg_group}_{self.name})
-{" " * space_num}: (i_hw_we_{self.reg_group}_{self.name}) ? i_hw_wdata_{self.reg_group}_{self.name}
+  assign nxt_{self.reg_group}_{self.name} = (i_hw_we_{self.reg_group}_{self.name}) ? i_hw_wdata_{self.reg_group}_{self.name}
+{" " * space_num}: (we_{self.reg_group}) ? (~reg_pwdata{self.field} & reg_{self.reg_group}_{self.name})
 {" " * space_num}: reg_{self.reg_group}_{self.name};\n'''
 
 class apb_protocol:

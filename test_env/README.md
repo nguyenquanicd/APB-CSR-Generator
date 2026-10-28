@@ -104,3 +104,21 @@ simulation). Run it with:
 cd sim/verilator
 TEST=csr_cdc_test make -f Makefile_async run
 ```
+
+## HW-vs-SW Priority Test
+
+`sim/tests/csr_priority_test/` checks that a HW write beats a same-cycle SW write on `rwi` and `w1c`
+fields, and that a SW write to one field never discards a HW event or a SW write on another field of
+the same register. Unlike the tests above it generates its own DUT from a workbook built by
+`make_workbook.py` (sync and async variants, so it also tests the generator), and aligns the HW event
+with the SW commit using `dut.we_sts`, which makes the collision exact for any clock ratio.
+
+```bash
+sim/tests/csr_priority_test/run.sh                 # generate, build and run sync + async
+sim/tests/csr_priority_test/run.sh -v async        # one variant
+sim/tests/csr_priority_test/run.sh -g <old-checkout>/CSR_Generation.py   # run against another generator
+```
+
+Tests T06-T14 fail on a generator where SW wins (e.g. `main` before this change); T01-T05 and
+T15-T18 (no collision, other register, or HW event one cycle after the SW commit) pass on both.
+Python is run with `python3.9 -s` because a user-site numpy 2.x breaks the system `openpyxl`.
