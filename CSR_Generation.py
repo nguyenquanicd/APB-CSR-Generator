@@ -4,6 +4,8 @@
 # Function: CSR Generation Tool
 # Page: VLSI Technology
 #
+# Version 2.1: a hardware write to a w1c field has priority over a software clear in the same cycle
+#   (version 2.0: software first); rwi keeps software first.
 # Version 2.0: the generated RTL follows the VLSIT RTL Design Rule v2
 #   (spec_template/VLSIT_RTL_Design_Rule.md of VLSIT_RTL_Generator_AI_Model):
 #   names (i_clk_apb, i_apb_*, LPARA_*, reg_*, w_*), port layout, header,
@@ -18,7 +20,7 @@ import shutil
 import sys
 from datetime import date, datetime
 
-VERSION = "2.0"
+VERSION = "2.1"
 RSVD_KEY = 'reserved'
 FLOW_NAME = "VLSIT RTL Generator AI Automation Flow"
 FLOW_PAGE = "https://github.com/nguyenquanicd/APB-CSR-Generator"
@@ -201,9 +203,9 @@ class bit:
 '''
         elif self.type == 'w1c':
             self.rtl += f'''
-  // {r}_{self.name} next value (w1c): software 1 clears, then hardware write, then hold.
-  assign {nxt} = (w_we_{r}) ? (~reg_wdata{self.field} & {cur})
-{space}: (i_hw_we_{r}_{self.name}) ? i_hw_wdata_{r}_{self.name}
+  // {r}_{self.name} next value (w1c): hardware write, then software 1 clears, then hold.
+  assign {nxt} = (i_hw_we_{r}_{self.name}) ? i_hw_wdata_{r}_{self.name}
+{space}: (w_we_{r}) ? (~reg_wdata{self.field} & {cur})
 {space}: {cur};
 '''
 

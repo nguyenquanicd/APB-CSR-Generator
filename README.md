@@ -64,7 +64,7 @@ configuration for review — see [Generation Workflow](#generation-workflow).
 | `ro` | `i_<reg>_<bit>` (input) — the register value is a direct passthrough of this port, no flop |
 | `rw` | `o_<reg>_<bit>` (output) — SW-writable, reads back the last SW write |
 | `rwi` | `o_<reg>_<bit>` (output), `i_hw_wdata_<reg>_<bit>` (input), `i_hw_we_<reg>_<bit>` (input, 1 bit) — SW write takes priority over a same-cycle HW write |
-| `w1c` | `o_<reg>_<bit>` (output), `i_hw_wdata_<reg>_<bit>` (input), `i_hw_we_<reg>_<bit>` (input, 1 bit) — a SW write of `1` clears the bit; HW can independently set it via `i_hw_we_*`/`i_hw_wdata_*` |
+| `w1c` | `o_<reg>_<bit>` (output), `i_hw_wdata_<reg>_<bit>` (input), `i_hw_we_<reg>_<bit>` (input, 1 bit) — a SW write of `1` clears the bit; HW can independently set it via `i_hw_we_*`/`i_hw_wdata_*`; a same-cycle HW write has priority over the SW clear, so a new event is never lost |
 
 A field named `reserved` gets no ports at all — it reads back as `0` and ignores writes.
 
@@ -154,17 +154,20 @@ sequenceDiagram
 | `ro` | Yes (passthrough) | Ignored | `i_<reg>_<bit>` | N/A — no register, wired straight through |
 | `rw` | Yes | Yes | — | SW write wins, else holds |
 | `rwi` | Yes | Yes | `i_hw_we_*` / `i_hw_wdata_*` | **SW write > HW write > hold** |
-| `w1c` | Yes | Writing `1` clears the bit, `0` is a no-op | `i_hw_we_*` / `i_hw_wdata_*` (typically HW *sets* the bit) | **SW write (clear) > HW write (set) > hold** |
+| `w1c` | Yes | Writing `1` clears the bit, `0` is a no-op | `i_hw_we_*` / `i_hw_wdata_*` (typically HW *sets* the bit) | **HW write (set) > SW write (clear) > hold** |
 
 ```mermaid
 flowchart TD
     WE{"w_we_<reg>\n(address match AND\nwrite-enable)?"}
     WE -->|"yes, type=rw"| SWVAL["nxt = pwdata field"]
     WE -->|"yes, type=rwi"| SWVAL
-    WE -->|"yes, type=w1c"| CLR["nxt = reg AND NOT(pwdata field)\n(1 clears, 0 holds)"]
-    WE -->|"no"| HWCHK{"i_hw_we_reg_bit?\n(rwi / w1c only)"}
+    WE -->|"no, type=rwi"| HWCHK{"i_hw_we_reg_bit?"}
     HWCHK -->|"yes"| HWVAL["nxt = i_hw_wdata_reg_bit"]
     HWCHK -->|"no"| HOLD["nxt = reg (unchanged)"]
+    W1H{"type=w1c:\ni_hw_we_reg_bit?"} -->|"yes"| HWVAL
+    W1H -->|"no"| W1W{"w_we_<reg>?"}
+    W1W -->|"yes"| CLR["nxt = reg AND NOT(pwdata field)\n(1 clears, 0 holds)"]
+    W1W -->|"no"| HOLD
 ```
 
 ### 3. Clock-Domain Crossing (`Asynchronous=1` only)
@@ -364,6 +367,7 @@ bakes them into the emitted module rather than leaving them runtime-configurable
 | 1.1 | 2026-09-20 | Fixed CDC bug in async template (Asynchronous=1): `o_prdata` was captured by an `always_ff @ (posedge i_bus_clk)` gated by `apb_read_en`, a signal generated entirely in the `i_reg_clk` domain, risking a missed/metastable read-data update across asynchronous clocks. `reg_prdata` now latches in the `i_reg_clk` domain (qualified by `apb_read_en`, same domain), and a new `reg_prdata_bus` FF resyncs it into the `i_bus_clk` domain using the already-synchronized `read_aclk_bus_clk_falling` pulse before driving `o_prdata`. Sync template (Asynchronous=0) unaffected. |
 | 1.2 | 2026-09-27 | Documentation overhaul: added Interface Signals, Architecture (generation-pipeline flowchart + link to the interactive `docs/architecture.html` block diagram), Design Description (APB handshake sequence, field-type decision flowchart, CDC handshake writeup), a Register Map for the `CSR_Example.xlsx` worked example (`abc`/`def`, bit-layout diagrams + tables covering all four field types), Generation Workflow (workbook format, CLI usage, output layout), Constraints and Limitations, Configuration Parameters, and Compliance. No RTL or generator changes. |
 | 2.0 | 2026-10-28 | Generated RTL follows the VLSIT RTL Design Rule v2: new port, signal and localparam names (table in section RTL rule compliance), `m_csr_sync` replaces `m_vlsi_synch`, aligned port groups, process labels, header, case defaults without `'x`, no latch for uncovered bits, no unused signal, relative file list. Options `--out`, `--project`, `--author`. An empty row of the sheet is skipped instead of crashing the tool. Behavior and timing are unchanged: 300k cycles (sync) and 400k cycles (async) of random APB traffic gave no difference to version 1.2, and the testbenches of `sim/tests` pass. |
+| 2.1 | 2026-10-28 | `w1c` fields: a hardware write (`i_hw_we_*` = 1) now has priority over a software clear in the same cycle, so a new event is never lost; the order is hardware write, then software clear, then hold. `rwi` is unchanged (software write first). Other behavior and timing are unchanged. |
 
 ---
 
